@@ -9,7 +9,31 @@ const StaticString
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-	g_context->write("-----");
+
+	g_context->write("len=");
+	g_context->write( data.length());
+	g_context->write( "\n");
+
+	for (int i=0; i < data.length(); i++) {
+		Variant el(data[i]);
+		g_context->write( "[");
+		g_context->write( String(i) );	
+		g_context->write( "]  ");
+		switch(el.getType()) {
+			case KindOfInt64 : g_context->write( "int\n"); break;
+			case KindOfStaticString : g_context->write( "static str\n"); break;
+			case KindOfString : g_context->write( "str\n"); break;
+			case KindOfArray : g_context->write( "array\n"); break; 
+			case KindOfObject : g_context->write( "mixed\n");break;
+			case KindOfRef : g_context->write( "ref\n");break;
+			 case KindOfDouble : g_context->write( "float\n");break;
+			default : g_context->write( "wrong\n");
+		}
+		
+
+	}
+
+
 	  return  TMP_XX.get();
 }
 
