@@ -17,7 +17,7 @@ static void check_type( const Array& data ) {
 	for (int i=0; i < data.length(); i++) {
 		Variant el(data[i]);
 		g_context->write( "[");
-		g_context->write( String(i) );	
+		g_context->write( String(i) );
 		g_context->write( "]  ");
 		switch(el.getType()) {
 			case KindOfInt64 : g_context->write( "int\n"); break;
@@ -25,7 +25,9 @@ static void check_type( const Array& data ) {
 			case KindOfString : g_context->write( "str\n"); break;
 			case KindOfArray : g_context->write( "array\n");
 				check_type( el.toArray() );
-				g_context->write( "--- end array----\n");
+				g_context->write( "--- end array  [");
+				g_context->write( String(i) );
+				g_context->write( "]\n");
 				break; 
 			case KindOfObject : g_context->write( "mixed\n");break;
 			case KindOfRef : g_context->write( "ref\n");break;
