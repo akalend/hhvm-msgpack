@@ -1,4 +1,5 @@
 #include "hphp/runtime/ext/extension.h"
+#include "hphp/runtime/base/execution-context.h"  // g_context
 
 namespace HPHP {
 
@@ -8,7 +9,7 @@ const StaticString
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-
+	g_context->write("-----");
 	  return  TMP_XX.get();
 }
 
