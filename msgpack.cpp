@@ -31,7 +31,9 @@ static void check_type( const Array& data ) {
 				break; 
 			case KindOfObject : g_context->write( "mixed\n");break;
 			case KindOfRef : g_context->write( "ref\n");break;
-			 case KindOfDouble : g_context->write( "float\n");break;
+			case KindOfDouble : g_context->write( "float\n");break;
+			case KindOfClass : g_context->write( "class\n");break;
+			 
 			default : g_context->write( "wrong\n");
 		}
 	}
