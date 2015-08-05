@@ -7,9 +7,9 @@ namespace HPHP {
 const StaticString 
 	TMP_XX("***");
 
-static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-
+static void check_type( const Array& data ) {
+	
 	g_context->write("len=");
 	g_context->write( data.length());
 	g_context->write( "\n");
@@ -23,15 +23,22 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 			case KindOfInt64 : g_context->write( "int\n"); break;
 			case KindOfStaticString : g_context->write( "static str\n"); break;
 			case KindOfString : g_context->write( "str\n"); break;
-			case KindOfArray : g_context->write( "array\n"); break; 
+			case KindOfArray : g_context->write( "array\n");
+				check_type( el.toArray() );
+				g_context->write( "--- end array----\n");
+				break; 
 			case KindOfObject : g_context->write( "mixed\n");break;
 			case KindOfRef : g_context->write( "ref\n");break;
 			 case KindOfDouble : g_context->write( "float\n");break;
 			default : g_context->write( "wrong\n");
 		}
-		
-
 	}
+}
+
+static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
+
+
+	check_type(data);
 
 
 	  return  TMP_XX.get();
