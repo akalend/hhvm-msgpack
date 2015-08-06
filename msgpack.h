@@ -7,21 +7,22 @@
 
 namespace HPHP {
 
+static String HHVM_FUNCTION(msgpack_check, const Array& data);
 static Array HHVM_FUNCTION(msgpack_unpack, const String& data);
 static String HHVM_FUNCTION(msgpack_pack, const Array& data);
-
 
 class MsgpackExtension : public Extension {
 	public:
 	
 	static int BufferSize;
+	static char* Buffer;
 	
 	MsgpackExtension(): Extension("msgpack", "1.0") {}
 
 	void moduleInit() override;
 	void moduleShutdown() override;
 
-} s_msgpack_extension;
+} ;
 
 
 
