@@ -154,17 +154,17 @@ static void printVariant(const Variant& data) {
 
 static String HHVM_FUNCTION(msgpack_check, const Array& data) {
 
-
 	ArrayData* ad = data.get();
   
 	for (ssize_t pos = ad->iter_begin(); pos != ad->iter_end();
 	       pos = ad->iter_advance(pos)) {
 	       const Variant key = ad->getKey(pos);
+	   	   const Variant val = ad->getValue(pos);
 		
 			printVariant( key);
+			g_context->write( "\t\t");
+			printVariant( val);
 			g_context->write( "\n");
-
-
 	}
 
 
