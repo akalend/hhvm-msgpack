@@ -1,3 +1,22 @@
+/*
+   +----------------------------------------------------------------------+
+   | HipHop for PHP                                                       |
+   +----------------------------------------------------------------------+
+   | Copyright (c) 2015 Alexandre Kalendarev                              |
+   +----------------------------------------------------------------------+
+   | This source file is subject to version 3.01 of the PHP license,      |
+   | that is bundled with this package in the file LICENSE, and is        |
+   | available through the world-wide-web at the following url:           |
+   | http://www.php.net/license/3_01.txt                                  |
+   | If you did not receive a copy of the PHP license and are unable to   |
+   | obtain it through the world-wide-web, please send a note to          |
+   | license@php.net so we can mail you a copy immediately.               |
+   +----------------------------------------------------------------------+
+
+	 part this code was derived from tarantool/msgpuck, author Roman Tsisyk
+*/
+
+
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
 
@@ -12,6 +31,9 @@ namespace HPHP {
 const StaticString 
 	TMP_XX("***");
 
+
+static void printVariant(const Variant& data);
+static void packVariant(const Variant& el);
 
 
 static int sizeof_pack( const Array& data ) {
@@ -37,7 +59,7 @@ static int sizeof_pack( const Array& data ) {
 				size += mp_sizeof_str( el.toString().length());
 				break;
 			}
-			
+
 			case KindOfArray : {
 				size += mp_sizeof_array( el.toArray().size() );
 				int arr_size = sizeof_pack( el.toArray() );
@@ -56,26 +78,6 @@ static int sizeof_pack( const Array& data ) {
 	return size;
 }
 
-
-static void printVariant(const Variant& data);
-
-static void printElement(const Variant& key, const Variant& val) {
-	printVariant(key);
-	printVariant(val);
-	g_context->write( "\n");
-}
-
-
-static void packVariant(const Variant& el){
-	
-};
-
-static void packElement(const Variant& key, const Variant& val) {
-	
-
-}
-
-
 static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant& , const Variant&)) {
 
 	g_context->write( "\tarray:\n");
@@ -88,6 +90,53 @@ static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Vari
 	g_context->write( "----- end array ----\n");
 
 }
+
+
+static void printElement(const Variant& key, const Variant& val) {
+	printVariant(key);
+	printVariant(val);
+	g_context->write( "\n");
+}
+
+static void encodeArrayElement(const Variant& key, const Variant& val) {
+	packVariant(key);
+	packVariant(val); 
+}
+
+
+static void packVariant(const Variant& el) {
+		
+		switch(el.getType()) {
+			case KindOfInt64 : { 
+				MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr, el.toInt64());
+				break; }
+			
+			case KindOfNull : { 
+				MsgpackExtension::BufferPtr = mp_encode_nil(MsgpackExtension::BufferPtr);
+				break; }
+
+			case KindOfStaticString : 
+			case KindOfString : {
+				MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
+				break;
+			}
+			
+			case KindOfArray : { 
+					MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
+					ArrayData* ad = el.toArray().get();
+					arrayIteration(ad, encodeArrayElement);
+					break; 
+				}
+
+			case KindOfDouble : {
+				MsgpackExtension::BufferPtr = mp_encode_float(MsgpackExtension::BufferPtr, el.toDouble());
+				break;
+		 	}
+			
+			default : g_context->write( "wrong");
+		}
+};
+
 
 static void printVariant(const Variant& data) {
 
@@ -118,11 +167,9 @@ static void printVariant(const Variant& data) {
 				g_context->write( data.toDouble());
 				break;
 		 
-			default : g_context->write( "wrong");
+			default :  raise_warning("unpack error input data");
 		}
 }
-
-
 
 
 void MsgpackExtension::moduleInit() {
@@ -147,8 +194,10 @@ void MsgpackExtension::moduleShutdown() {
 
 //////////////////    static    /////////////////////////
 int MsgpackExtension::BufferSize = 0;
+int MsgpackExtension::Level = 0;
 void* MsgpackExtension::Buffer = NULL;
-void* MsgpackExtension::BufferPtr = NULL;
+char* MsgpackExtension::BufferPtr = NULL;
+
 
 static MsgpackExtension s_msgpack_extension;
 
@@ -157,6 +206,9 @@ static MsgpackExtension s_msgpack_extension;
 
 static String HHVM_FUNCTION(msgpack_check, const Array& data) {
 
+	int len = sizeof_pack(data);
+	printf("len=%d\n", len);
+
 	ArrayData* ad = data.get();
   	arrayIteration(ad, printElement);
 
@@ -164,18 +216,19 @@ static String HHVM_FUNCTION(msgpack_check, const Array& data) {
 }
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
+
+	MsgpackExtension::Level = 0;	
+	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
+	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
-	// int size = sizeof_pack(data);
-	// printf("buff = %d, size=%d\n\n", MsgpackExtension::BufferSize, size);
-	// MsgpackExtension::BufferSize = size;
-	
-	MsgpackExtension::BufferPtr = MsgpackExtension::Buffer;
-	ArrayData* ad = data.get();
-  	arrayIteration(ad, packElement);
+	for (int i = 0; i < data.length(); ++i)	{
+		packVariant(data[i]);
+	}
+	size_t len = reinterpret_cast<uint64_t>(MsgpackExtension::BufferPtr) - reinterpret_cast<uint64_t>(MsgpackExtension::Buffer);
 
+	StringData* str =  StringData::Make(reinterpret_cast<const char*>(MsgpackExtension::Buffer), len, CopyString);
 
-
-	return  TMP_XX.get();
+	return  String(str);
 }
 
 

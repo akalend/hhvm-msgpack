@@ -16,15 +16,15 @@ class MsgpackExtension : public Extension {
 	
 	static int BufferSize;
 	static void* Buffer;
-	static void* BufferPtr;
+	static char* BufferPtr;
+	static int Level;
 	
-	MsgpackExtension(): Extension("msgpack", "1.0") {}
+	MsgpackExtension(): Extension("msgpack", "0.1.0") {}
 
 	void moduleInit() override;
 	void moduleShutdown() override;
 
 } ;
-
 
 
 

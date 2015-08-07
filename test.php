@@ -14,11 +14,13 @@ $arr = [ 'key' => 'sdsd', 'klisma' =>21 ,  1  => "c"  , 2  => "d"  ,   $a => [1,
 
 // var_dump($arr);
 
-$data = msgpack_check(  [1,2,3, null, '****'] );
+$data = msgpack_pack( [1,2,3, null, '****', ['s'=>'dddd','apple'=>'banana', 'xx' =>21 ] ] );
+
+file_put_contents("data.bin", $data);
 
 // $data = msgpack_pack( $arr);
-// var_dump($data);
-
-
+// echo "len=",strlen($data),PHP_EOL,$data,PHP_EOL;
+// $data = msgpack_cck($data);
+var_dump($data); 
 // $data = msgpack_unpack( "..." );
 // var_dump($data);
