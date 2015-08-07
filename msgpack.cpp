@@ -121,6 +121,26 @@ static MsgpackExtension s_msgpack_extension;
 //   KindOfRef           = 0x50,  //  01010000
 // };
 
+static void printVariant(const Variant& data);
+
+static void printElement(const Variant& key, const Variant& val) {
+	printVariant(key);
+	printVariant(val);
+	g_context->write( "\n");
+}
+
+static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant& , const Variant&)) {
+
+	g_context->write( "\tarray:\n");
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+	       pos = data->iter_advance(pos)) {
+	       const Variant key = data->getKey(pos);
+	   	   const Variant val = data->getValue(pos);
+	   	   arrayIterationCb(key, val);
+	}
+g_context->write( "----- end array ----\n");
+
+}
 
 static void printVariant(const Variant& data) {
 
@@ -139,7 +159,11 @@ static void printVariant(const Variant& data) {
 				g_context->write( "str: "); 
 				g_context->write( data.toString()); 
 				break;}
-			case KindOfArray : g_context->write( "array"); break; 
+			case KindOfArray : { g_context->write( "array"); 
+					ArrayData* ad = data.toArray().get();
+					arrayIteration(ad, printElement);				
+					break; 
+				}
 			case KindOfObject : g_context->write( "mixed"); break;
 			case KindOfRef : g_context->write( "ref");	break;
 			case KindOfDouble : 
@@ -152,20 +176,24 @@ static void printVariant(const Variant& data) {
 
 }
 
+
+
 static String HHVM_FUNCTION(msgpack_check, const Array& data) {
 
 	ArrayData* ad = data.get();
-  
-	for (ssize_t pos = ad->iter_begin(); pos != ad->iter_end();
-	       pos = ad->iter_advance(pos)) {
-	       const Variant key = ad->getKey(pos);
-	   	   const Variant val = ad->getValue(pos);
+  	arrayIteration(ad, printElement);
+  	g_context->write( "----- end ----\n");
+
+	// for (ssize_t pos = ad->iter_begin(); pos != ad->iter_end();
+	//        pos = ad->iter_advance(pos)) {
+	//        const Variant key = ad->getKey(pos);
+	//    	   const Variant val = ad->getValue(pos);
 		
-			printVariant( key);
-			g_context->write( "\t\t");
-			printVariant( val);
-			g_context->write( "\n");
-	}
+	// 		printVariant( key);
+	// 		g_context->write( "\t\t");
+	// 		printVariant( val);
+	// 		g_context->write( "\n");
+	// }
 
 
 	return  TMP_XX.get();
