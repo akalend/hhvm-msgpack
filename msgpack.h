@@ -15,7 +15,8 @@ class MsgpackExtension : public Extension {
 	public:
 	
 	static int BufferSize;
-	static char* Buffer;
+	static void* Buffer;
+	static void* BufferPtr;
 	
 	MsgpackExtension(): Extension("msgpack", "1.0") {}
 
