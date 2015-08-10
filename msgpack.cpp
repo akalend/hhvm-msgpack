@@ -133,7 +133,7 @@ static void packVariant(const Variant& el) {
 				}
 
 			case KindOfDouble : {
-				MsgpackExtension::BufferPtr = mp_encode_float(MsgpackExtension::BufferPtr, el.toDouble());
+				MsgpackExtension::BufferPtr = mp_encode_double(MsgpackExtension::BufferPtr, el.toDouble());
 				break;
 		 	}
 			
@@ -229,9 +229,19 @@ void unpackElement( char **p, Variant* pout) {
 			break;
 		}
 
+		case MP_DOUBLE : {
+
+			double dbl_val = mp_decode_double(const_cast<const char**>(&pos));
+	
+			*pout = dbl_val;
+			printf("decode double %3.0f\n", dbl_val);
+			*p = pos;
+			break; 
+		}
+
 		default :  
 			// raise_warning("unpack error data element");
-			printf("unpack error data element");
+			printf("unpack error data element\n");
 			pout->setNull();	
 			mp_next(const_cast<const char**>(p));
 	}
