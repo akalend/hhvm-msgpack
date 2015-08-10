@@ -108,7 +108,11 @@ static void packVariant(const Variant& el) {
 		
 		switch(el.getType()) {
 			case KindOfInt64 : { 
-				MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr, el.toInt64());
+				int64_t int_val = el.toInt64();
+				if (int_val >= 0)
+					MsgpackExtension::BufferPtr = mp_encode_uint(MsgpackExtension::BufferPtr,  int_val );
+				else
+					MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr,  int_val );
 				break; }
 			
 			case KindOfNull : { 
@@ -171,6 +175,71 @@ static void printVariant(const Variant& data) {
 		}
 }
 
+// enum mp_type {
+// 	MP_NIL = 0,
+// 	MP_UINT,
+// 	MP_INT,
+// 	MP_STR=3,
+// 	MP_BIN,
+// 	MP_ARRAY,
+// 	MP_MAP,
+// 	MP_BOOL,
+// 	MP_FLOAT,
+// 	MP_DOUBLE,
+// 	MP_EXT
+// };
+
+void unpackElement( char **p, Variant* pout) {
+
+	const char c = (**p);
+	char * pos = *p;
+	mp_type type = mp_typeof(c);
+	
+	printf("decode type %d\n", type);
+
+	switch(type) {
+
+		case MP_NIL : {
+			pout->setNull();
+		}
+
+		case MP_UINT : {
+			int64_t intval = mp_decode_uint(const_cast<const char**>(&pos));
+	
+			*pout = intval;
+			printf("decode int %ld\n", intval);
+			*p = pos;
+			break; 
+		}
+
+		case MP_INT : {
+			int64_t intval = mp_decode_int(const_cast<const char**>(&pos));
+	
+			*pout = intval;
+			printf("decode int %ld\n", intval);
+			*p = pos;
+			break; 
+		}
+
+		case MP_STR : {
+			uint32_t len = 0;
+			const char * res = mp_decode_str(const_cast<const char**>(&pos), &len);
+			*p = pos;			
+			*pout = String(StringData::Make( res, len, CopyString ));
+			break;
+		}
+
+		default :  
+			// raise_warning("unpack error data element");
+			printf("unpack error data element");
+			pout->setNull();	
+			mp_next(const_cast<const char**>(p));
+	}
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 void MsgpackExtension::moduleInit() {
 	
@@ -234,6 +303,26 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	Array ret = Array::Create();
+
+	char * p = const_cast<char *>(data.c_str());
+	char c = *p;
+
+	if ( mp_typeof(c) != MP_ARRAY ) {
+ 		raise_warning("the root element must be array");
+		return ret;
+	}
+	int count = mp_decode_array( const_cast<const char**>(&p));
+
+	printf("elements %d\n", count);
+
+	for (int i =0; i < count; i++) {
+		Variant el;
+		unpackElement(&p, &el);
+		ret.set(i, el);
+	}
+
+	//mp_typeof(**r)
+
 	return  ret;
 }
 
