@@ -12,9 +12,9 @@ $int = 123;
 $a = "aaaa";
 $arr = [ 'key' => 'sdsd', 'klisma' =>21 ,  1  => "c"  , 2  => "d"  ,   $a => [1,2,3, null, '****'] ,  3.6  => 'z'] ;
 
-if (true) {
+if (1) {
 // var_dump($arr);
-	$data = [ 7, 256,1024, -1.6, 'sdsdsd', 876675];
+	$data = [ 7 , 123, 12 , true, 1024, -1.6, false, 876675];
 	var_dump($data); 
 	$data = msgpack_pack( $data ); //, '****', ['s'=>'dddd','apple'=>'banana', 'xx' =>21 ] 
 	file_put_contents("data.bin", $data);

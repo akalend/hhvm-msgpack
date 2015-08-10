@@ -119,6 +119,11 @@ static void packVariant(const Variant& el) {
 				MsgpackExtension::BufferPtr = mp_encode_nil(MsgpackExtension::BufferPtr);
 				break; }
 
+			case KindOfBoolean : { 
+				MsgpackExtension::BufferPtr = mp_encode_bool(MsgpackExtension::BufferPtr, el.toBoolean());
+				break; 
+			}
+
 			case KindOfStaticString : 
 			case KindOfString : {
 				MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
@@ -224,15 +229,21 @@ void unpackElement( char **p, Variant* pout) {
 		case MP_STR : {
 			uint32_t len = 0;
 			const char * res = mp_decode_str(const_cast<const char**>(&pos), &len);
-			*p = pos;			
+			*p = pos;
 			*pout = String(StringData::Make( res, len, CopyString ));
 			break;
 		}
 
-		case MP_DOUBLE : {
+		case MP_BOOL : {
+			const bool res = mp_decode_bool(const_cast<const char**>(&pos));
+			*p = pos;
+			*pout =  res ? true : false;
+			break;
 
+		}
+
+		case MP_DOUBLE : {
 			double dbl_val = mp_decode_double(const_cast<const char**>(&pos));
-	
 			*pout = dbl_val;
 			printf("decode double %3.0f\n", dbl_val);
 			*p = pos;
@@ -240,8 +251,7 @@ void unpackElement( char **p, Variant* pout) {
 		}
 
 		default :  
-			// raise_warning("unpack error data element");
-			printf("unpack error data element\n");
+			raise_warning("unpack error data element");
 			pout->setNull();	
 			mp_next(const_cast<const char**>(p));
 	}
