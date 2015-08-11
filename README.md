@@ -28,6 +28,6 @@ edit the hhvm config files: /etc/hhvm/php.ini
 
 ### Authors
 
-Alexandre Kalendarev
+Alexandre Kalendarev - initial author
 
 Roman Tsisyk [msg-packer https://github.com/rtsisyk/msgpuck]
