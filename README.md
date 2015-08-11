@@ -20,7 +20,7 @@ edit the hhvm config files: /etc/hhvm/php.ini
 
 ### Example
 
-	$data = [ 1, "***", ['foo'=>'bar', ...] , 1.6 , null ]  // the data bust be array
+	$data = [ 1, "***", ['foo'=>'bar', ...] , 1.6 , null ]  // the data must be array
 	$encode_data = msgpack_pack( $data );
 	...
 	$data = msgpack_unpack( $dencode_data);
