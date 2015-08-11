@@ -4,6 +4,8 @@ MessagePack (msgpack.org) is an efficient binary serialization format, which let
 
 For pack/unpack use the Roman Tsisyk msg-packer https://github.com/rtsisyk/msgpuck
 
+Hav't the any dependency.
+
 ### Usage
 
 	$data = [ 'key', 'sdsd', 'klisma', 21 ,   ['kkk'  => 'z', 'dsn'  => "c"  , 2 => "d"] , [1,2,3, null, '****'] ];
