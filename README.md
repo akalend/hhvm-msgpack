@@ -4,7 +4,7 @@ MessagePack (msgpack.org) is an efficient binary serialization format, which let
 
 For pack/unpack use the Roman Tsisyk msg-packer https://github.com/rtsisyk/msgpuck
 
-Havn't the any dependency.
+It has not any dependencies.
 
 ### Installation
 
