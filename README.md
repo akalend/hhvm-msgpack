@@ -18,13 +18,14 @@ edit the hhvm config files: /etc/hhvm/php.ini
 	hhvm.dynamic_extensions[] = msgpack.so
  
 
+### Example
 
-
-### Usage
-
+	$data = [ 1, "***", ['foo'=>'bar', ...] , 1.6 , null ]  // the data bust be array
 	$encode_data = msgpack_pack( $data );
 	...
 	$data = msgpack_unpack( $dencode_data);
+
+
 
 ### Authors
 
