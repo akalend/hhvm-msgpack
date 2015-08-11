@@ -24,11 +24,8 @@ edit the hhvm config files: /etc/hhvm/php.ini
 
 ### Usage
 
-	$data = [ 'key', 'sdsd', 'klisma', 21 ,   ['kkk'  => 'z', 'dsn'  => "c"  , 2 => "d"] , [1,2,3, null, '****'] ];
-	var_dump($data); 
 	$encode_data = msgpack_pack( $data );
-
+	...
 	$data = msgpack_unpack( $dencode_data);
-	var_dump($data); 
 
 ### This is alpha version
