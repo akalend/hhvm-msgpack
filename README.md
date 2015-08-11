@@ -6,6 +6,22 @@ For pack/unpack use the Roman Tsisyk msg-packer https://github.com/rtsisyk/msgpu
 
 Hav't the any dependency.
 
+### Installation
+
+	
+	$ git clone git@github.com:akalend/hhvm-msgpack.git
+	$ cd hhvm-msgpack
+	$ hphpize && cmake . && make
+	$ sudo make install
+
+edit the hhvm config files: /etc/hhvm/php.ini 
+
+	hhvm.dynamic_extension_path =  /usr/lib/x86_64-linux-gnu/hhvm/extensions/20150212/
+	hhvm.dynamic_extensions[] = msgpack.so
+ 
+
+
+
 ### Usage
 
 	$data = [ 'key', 'sdsd', 'klisma', 21 ,   ['kkk'  => 'z', 'dsn'  => "c"  , 2 => "d"] , [1,2,3, null, '****'] ];
