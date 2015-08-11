@@ -29,7 +29,7 @@ namespace HPHP {
 #define BUFFSIZE 1024
 
 const StaticString 
-	TMP_XX("***");
+	TMP_XX("temp");
 
 
 static void printVariant(const Variant& data);
@@ -80,22 +80,12 @@ static int sizeof_pack( const Array& data ) {
 
 static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant& , const Variant&)) {
 
-	g_context->write( "\tarray:\n");
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
 	       pos = data->iter_advance(pos)) {
 	       const Variant key = data->getKey(pos);
 	   	   const Variant val = data->getValue(pos);
 	   	   arrayIterationCb(key, val);
 	}
-	g_context->write( "----- end array ----\n");
-
-}
-
-
-static void printElement(const Variant& key, const Variant& val) {
-	printVariant(key);
-	printVariant(val);
-	g_context->write( "\n");
 }
 
 static void encodeArrayElement(const Variant& key, const Variant& val) {
@@ -146,73 +136,24 @@ static void packVariant(const Variant& el) {
 		}
 };
 
-
-static void printVariant(const Variant& data) {
-
-		switch(data.getType()) {
-			case KindOfInt64 : { 
-				g_context->write( "int: "); 
-				g_context->write( data.toInt64());
-				break; }
-			
-			case KindOfNull : { 
-				g_context->write( "null"); 
-				break; }
-
-			case KindOfStaticString : 
-			case KindOfString : {
-				g_context->write( "str: "); 
-				g_context->write( data.toString()); 
-				break;}
-			case KindOfArray : { g_context->write( "array"); 
-					ArrayData* ad = data.toArray().get();
-					arrayIteration(ad, printElement);				
-					break; 
-				}
-			case KindOfObject : g_context->write( "mixed"); break;
-			case KindOfRef : g_context->write( "ref");	break;
-			case KindOfDouble : 
-				g_context->write( "float: ");
-				g_context->write( data.toDouble());
-				break;
-		 
-			default :  raise_warning("unpack error input data");
-		}
-}
-
-// enum mp_type {
-// 	MP_NIL = 0,
-// 	MP_UINT,
-// 	MP_INT,
-// 	MP_STR=3,
-// 	MP_BIN,
-// 	MP_ARRAY,
-// 	MP_MAP,
-// 	MP_BOOL,
-// 	MP_FLOAT,
-// 	MP_DOUBLE,
-// 	MP_EXT
-// };
-
 void unpackElement( char **p, Variant* pout) {
 
 	const char c = (**p);
 	char * pos = *p;
 	mp_type type = mp_typeof(c);
 	
-	printf("decode type %d\n", type);
-
 	switch(type) {
 
 		case MP_NIL : {
 			pout->setNull();
+			(*p)++;
+			break;
 		}
 
 		case MP_UINT : {
 			int64_t intval = mp_decode_uint(const_cast<const char**>(&pos));
 	
 			*pout = intval;
-			printf("decode int %ld\n", intval);
 			*p = pos;
 			break; 
 		}
@@ -221,7 +162,6 @@ void unpackElement( char **p, Variant* pout) {
 			int64_t intval = mp_decode_int(const_cast<const char**>(&pos));
 	
 			*pout = intval;
-			printf("decode int %ld\n", intval);
 			*p = pos;
 			break; 
 		}
@@ -245,7 +185,37 @@ void unpackElement( char **p, Variant* pout) {
 		case MP_DOUBLE : {
 			double dbl_val = mp_decode_double(const_cast<const char**>(&pos));
 			*pout = dbl_val;
-			printf("decode double %3.0f\n", dbl_val);
+			*p = pos;
+			break; 
+		}
+
+		case MP_ARRAY : {
+			int count = mp_decode_array(const_cast<const char**>(&pos));
+			Array ret = Array::Create();
+			for(int i = 0; i < count; ++i) {
+				Variant val;
+				unpackElement( &pos, &val);
+				ret.add(i,val);
+			}
+
+			*pout = ret;
+			*p = pos;
+			break; 
+		}
+
+		case MP_MAP : {
+			int count = mp_decode_map(const_cast<const char**>(&pos));
+
+			Array ret = Array::Create();
+			for(int i = 0; i < count; ++i) {
+				Variant key, val;
+				unpackElement( &pos, &key);
+				unpackElement( &pos, &val);
+
+				ret.add(key,val,true);
+			}
+
+			*pout = ret;
 			*p = pos;
 			break; 
 		}
@@ -295,11 +265,7 @@ static MsgpackExtension s_msgpack_extension;
 
 static String HHVM_FUNCTION(msgpack_check, const Array& data) {
 
-	int len = sizeof_pack(data);
-	printf("len=%d\n", len);
-
-	ArrayData* ad = data.get();
-  	arrayIteration(ad, printElement);
+	// int len = sizeof_pack(data);
 
 	return  TMP_XX.get();
 }
