@@ -96,44 +96,44 @@ static void encodeArrayElement(const Variant& key, const Variant& val) {
 
 static void packVariant(const Variant& el) {
 		
-		switch(el.getType()) {
-			case KindOfInt64 : { 
-				int64_t int_val = el.toInt64();
-				if (int_val >= 0)
-					MsgpackExtension::BufferPtr = mp_encode_uint(MsgpackExtension::BufferPtr,  int_val );
-				else
-					MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr,  int_val );
-				break; }
-			
-			case KindOfNull : { 
-				MsgpackExtension::BufferPtr = mp_encode_nil(MsgpackExtension::BufferPtr);
-				break; }
+	switch(el.getType()) {
+		case KindOfInt64 : { 
+			int64_t int_val = el.toInt64();
+			if (int_val >= 0)
+				MsgpackExtension::BufferPtr = mp_encode_uint(MsgpackExtension::BufferPtr,  int_val );
+			else
+				MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr,  int_val );
+			break; }
+		
+		case KindOfNull : { 
+			MsgpackExtension::BufferPtr = mp_encode_nil(MsgpackExtension::BufferPtr);
+			break; }
 
-			case KindOfBoolean : { 
-				MsgpackExtension::BufferPtr = mp_encode_bool(MsgpackExtension::BufferPtr, el.toBoolean());
+		case KindOfBoolean : { 
+			MsgpackExtension::BufferPtr = mp_encode_bool(MsgpackExtension::BufferPtr, el.toBoolean());
+			break; 
+		}
+
+		case KindOfStaticString : 
+		case KindOfString : {
+			MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
+			break;
+		}
+		
+		case KindOfArray : { 
+				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
+				ArrayData* ad = el.toArray().get();
+				arrayIteration(ad, encodeArrayElement);
 				break; 
 			}
 
-			case KindOfStaticString : 
-			case KindOfString : {
-				MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
-				break;
-			}
-			
-			case KindOfArray : { 
-					MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
-					ArrayData* ad = el.toArray().get();
-					arrayIteration(ad, encodeArrayElement);
-					break; 
-				}
-
-			case KindOfDouble : {
-				MsgpackExtension::BufferPtr = mp_encode_double(MsgpackExtension::BufferPtr, el.toDouble());
-				break;
-		 	}
-			
-			default : g_context->write( "wrong");
-		}
+		case KindOfDouble : {
+			MsgpackExtension::BufferPtr = mp_encode_double(MsgpackExtension::BufferPtr, el.toDouble());
+			break;
+	 	}
+		
+		default : raise_warning("error type of data element");
+	}
 };
 
 void unpackElement( char **p, Variant* pout) {
@@ -306,8 +306,6 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 		unpackElement(&p, &el);
 		ret.set(i, el);
 	}
-
-	//mp_typeof(**r)
 
 	return  ret;
 }
