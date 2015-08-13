@@ -247,7 +247,7 @@ void MsgpackExtension::moduleInit() {
 void MsgpackExtension::moduleShutdown() {
 
 	free(MsgpackExtension::Buffer);
-	printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
+	// printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
 }
 
 
