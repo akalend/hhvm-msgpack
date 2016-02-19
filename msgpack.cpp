@@ -54,7 +54,6 @@ static int sizeof_pack( const Array& data ) {
 				break; 
 			}
 			
-			case KindOfStaticString : 
 			case KindOfString : {
 				size += mp_sizeof_str( el.toString().length());
 				break;
@@ -114,7 +113,6 @@ static void packVariant(const Variant& el) {
 			break; 
 		}
 
-		case KindOfStaticString : 
 		case KindOfString : {
 			MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
 			break;
@@ -233,7 +231,6 @@ void unpackElement( char **p, Variant* pout) {
 
 void MsgpackExtension::moduleInit() {
 	
-	HHVM_FE(msgpack_check);
 	HHVM_FE(msgpack_pack);
 	HHVM_FE(msgpack_unpack);
 
@@ -262,13 +259,6 @@ static MsgpackExtension s_msgpack_extension;
 
 //////////////////    HHVM_FUNCTION     //////////////////
 
-
-static String HHVM_FUNCTION(msgpack_check, const Array& data) {
-
-	// int len = sizeof_pack(data);
-
-	return  TMP_XX.get();
-}
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
