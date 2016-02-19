@@ -4,6 +4,9 @@ MessagePack (msgpack.org) is an efficient binary serialization format, which let
 
 It has not any dependencies.
 
+For HHVM new version (more 3.9) use branch hhvm-v-3.12
+
+
 ### Installation
 
 	
