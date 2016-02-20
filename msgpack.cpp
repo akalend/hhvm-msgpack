@@ -70,6 +70,11 @@ static int sizeof_pack( const Array& data ) {
 				size += mp_sizeof_float(el.toDouble());
 				break;
 		 
+			case KindOfBoolean : 
+				size += mp_sizeof_bool(el.toBoolean());
+				break;
+
+
 			default : g_context->write( "wrong\n");
 		}
 	}

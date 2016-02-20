@@ -15,9 +15,26 @@
    +----------------------------------------------------------------------+
 */
 
+/**
+*  packed the elements 
+*  
+*  @example  $data = msgpack_pack([42, 'Vasiliy Pupkin', true])
+*
+*  @param array $data  - input data
+*  @return string      - packed data
+*/
 <<__Native>>
 function msgpack_pack( array $data ): String;
 
+
+/**
+*  unpacked the binary data (string) 
+*  
+*  @example  $data = msgpack_unpack($packed_data)
+*
+*  @param  string $msg     - packed binary data
+*  @return array           - elements
+*/
 <<__Native>>
 function msgpack_unpack(string $msg): Array;
 
