@@ -5,15 +5,15 @@
 *
 */
 
-$arr = [ 'key', 'sdsd', 'klisma', 21 ,  [ 'sss' => 12, 0 => '2333'  ]];
+$arr = [ 'key', 'sdsd', null,  21 ,  [ 'sss' => 12, 0 => '2333'  ]];
 
-if (0) {
+if (1) {
 	$data = $arr;
 	var_dump($data); 
 	$data = msgpack_pack( $data );
-	file_put_contents('data.bin', $data );
+	// file_put_contents('data.bin', $data );
 }
 
-$data = file_get_contents('../data.bin');
+// $data = file_get_contents('../data.bin');
 $data = msgpack_unpack( $data);
 var_dump($data); 

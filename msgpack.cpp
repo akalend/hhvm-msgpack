@@ -123,7 +123,13 @@ static void packVariant(const Variant& el) {
 			break;
 		}
 		
-		case KindOfArray : { 
+		case KindOfArray : {
+
+				// тут надо проверить на тип массива,
+				// если это массив без индексов, то сохранить как массив
+			    // иначе сохранить как карту (map)
+
+
 				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
 				ArrayData* ad = el.toArray().get();
 				arrayIteration(ad, encodeArrayElement);
