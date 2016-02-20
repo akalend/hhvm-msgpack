@@ -5,9 +5,9 @@ $arr = [ 'key', 'sdsd', 'klisma', 21 ,   ['kkk'  => 'z', 'dsn'  => "c"  , 2 => "
 
 if (1) {
 	$data = $arr;
-	var_dump($data); 
+	print_r($data); 
 	$data = msgpack_pack( $data );
 }
 
 $data = msgpack_unpack( $data);
-var_dump($data); 
+print_r($data); 
