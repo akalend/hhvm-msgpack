@@ -14,6 +14,23 @@
    +----------------------------------------------------------------------+
 
 	 part this code was derived from tarantool/msgpuck, author Roman Tsisyk
+
+	 for HHVM version 3.13
+*/
+
+/*
+  KindOfUninit          = 0x00,  //  00000000
+  KindOfNull            = 0x01,  //  00000001
+  KindOfBoolean         = 0x09,  //  00001001    9
+  KindOfInt64           = 0x11,  //  00010001   17
+  KindOfDouble          = 0x19,  //  00011001   25 
+  KindOfPersistentString = 0x1b, //  00011011
+  KindOfPersistentArray = 0x1d,  //  00011101
+  KindOfString          = 0x22,  //  00100010   34 
+  KindOfArray           = 0x34,  //  00110100   52
+  KindOfObject          = 0x40,  //  01000000   64 
+  KindOfResource        = 0x50,  //  01010000
+  KindOfRef             = 0x60,  //  01100000
 */
 
 
@@ -28,13 +45,12 @@ namespace HPHP {
 
 #define BUFFSIZE 1024
 
-const StaticString 
-	TMP_XX("temp");
-
 
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
 
+
+static void test(const Array& el);
 
 static int sizeof_pack( const Array& data ) {
 		
@@ -98,8 +114,29 @@ static void encodeArrayElement(const Variant& key, const Variant& val) {
 }
 
 
+static void test(const Array& data) {
+	printf( "call %s:%d\n", __FUNCTION__, __LINE__);
+
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+		       pos = data->iter_advance(pos)) {
+		       const Variant key = data->getKey(pos);
+		   	   
+		   	   if (key.isString())
+		   	   		printf("key : [%s]\n", key.toString().c_str());
+		   	   else if (key.isInteger())
+		   	    		printf("key : [%ld]\n", key.toInt64());
+		   	    else 
+		   	    	printf("unknow type: %d",  (int)key.getType());
+	}
+
+}
+
+
 static void packVariant(const Variant& el) {
 		
+
+printf("packVariant type: %d\n", (int)el.getType());
+
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
@@ -128,6 +165,9 @@ static void packVariant(const Variant& el) {
 				// тут надо проверить на тип массива,
 				// если это массив без индексов, то сохранить как массив
 			    // иначе сохранить как карту (map)
+
+printf("packVariant Array\n");
+				test( el.toArray() );
 
 
 				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
@@ -268,6 +308,8 @@ char* MsgpackExtension::BufferPtr = NULL;
 
 static MsgpackExtension s_msgpack_extension;
 
+
+
 //////////////////    HHVM_FUNCTION     //////////////////
 
 
@@ -277,6 +319,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
 	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
+
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}

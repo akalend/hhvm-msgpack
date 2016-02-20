@@ -5,12 +5,14 @@
 *
 */
 
-$arr = [ 'key', 'sdsd', null,  21 ,  [ 'sss' => 12, 0 => '2333'  ]];
+$arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ]];
 
 if (1) {
 	$data = $arr;
-	var_dump($data); 
+	print_r($data); 
 	$data = msgpack_pack( $data );
+
+	// echo $data , PHP_EOL;
 	// file_put_contents('data.bin', $data );
 }
 
