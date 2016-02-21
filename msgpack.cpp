@@ -18,22 +18,6 @@
 	 for HHVM version 3.13
 */
 
-/*
-  KindOfUninit          = 0x00,  //  00000000    0
-  KindOfNull            = 0x01,  //  00000001    1
-  KindOfBoolean         = 0x09,  //  00001001    9
-  KindOfInt64           = 0x11,  //  00010001   17
-  KindOfDouble          = 0x19,  //  00011001   25 
-  KindOfPersistentString = 0x1b, //  00011011   27
-  KindOfPersistentArray = 0x1d,  //  00011101   29
-  KindOfString          = 0x22,  //  00100010   34 
-  KindOfArray           = 0x34,  //  00110100   52
-  KindOfObject          = 0x40,  //  01000000   64 
-  KindOfResource        = 0x50,  //  01010000
-  KindOfRef             = 0x60,  //  01100000
-*/
-
-
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
 
