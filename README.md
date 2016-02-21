@@ -18,9 +18,18 @@ edit the hhvm config files: /etc/hhvm/php.ini
 	hhvm.dynamic_extensions[] = msgpack.so
 
 ### Limitation
-	The common lenght of pack must be less 4096 bytes. If need more, You can change define BUFFSIZE  the line 8 in the msgpack.h:
+	
+	Root element must be array
+
+	Don't support Ext type (msqpack specification ext type)
+
+	Don't work with Hack collections (in TODO list)
+
+
+	The common lenght of pack must be less 4096 bytes. If need more, You can change define BUFFSIZE  the line 8 in the msgpack.h (Dynamic memory allocate in TODO list):
 
 		#define BUFFSIZE 4096
+
 
 
 ### Example
