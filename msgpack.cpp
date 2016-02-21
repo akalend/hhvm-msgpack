@@ -43,8 +43,6 @@
 
 namespace HPHP {
 
-#define BUFFSIZE 1024
-
 
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
