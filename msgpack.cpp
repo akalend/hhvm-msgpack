@@ -50,8 +50,6 @@ static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
 
 
-static void test(const Array& el);
-
 static int sizeof_pack( const Array& data ) {
 		
 	int size = 0;
@@ -70,11 +68,13 @@ static int sizeof_pack( const Array& data ) {
 				break; 
 			}
 			
+			case KindOfPersistentString:
 			case KindOfString : {
 				size += mp_sizeof_str( el.toString().length());
 				break;
 			}
 
+			case KindOfPersistentArray:
 			case KindOfArray : {
 				size += mp_sizeof_array( el.toArray().size() );
 				int arr_size = sizeof_pack( el.toArray() );
@@ -114,29 +114,8 @@ static void encodeArrayElement(const Variant& key, const Variant& val) {
 }
 
 
-static void test(const Array& data) {
-	printf( "call %s:%d\n", __FUNCTION__, __LINE__);
-
-	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-		       pos = data->iter_advance(pos)) {
-		       const Variant key = data->getKey(pos);
-		   	   
-		   	   if (key.isString())
-		   	   		printf("key : [%s]\n", key.toString().c_str());
-		   	   else if (key.isInteger())
-		   	    		printf("key : [%ld]\n", key.toInt64());
-		   	    else 
-		   	    	printf("unknow type: %d",  (int)key.getType());
-	}
-
-}
-
-
 static void packVariant(const Variant& el) {
 		
-
-printf("packVariant type: %d\n", (int)el.getType());
-
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
@@ -155,20 +134,14 @@ printf("packVariant type: %d\n", (int)el.getType());
 			break; 
 		}
 
+		case KindOfPersistentString:
 		case KindOfString : {
 			MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
 			break;
 		}
 		
+		case KindOfPersistentArray:
 		case KindOfArray : {
-
-				// тут надо проверить на тип массива,
-				// если это массив без индексов, то сохранить как массив
-			    // иначе сохранить как карту (map)
-
-printf("packVariant Array\n");
-				test( el.toArray() );
-
 
 				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
 				ArrayData* ad = el.toArray().get();

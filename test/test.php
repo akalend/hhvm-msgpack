@@ -5,7 +5,7 @@
 *
 */
 
-$arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ]];
+$arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];
 
 if (1) {
 	$data = $arr;
@@ -13,9 +13,9 @@ if (1) {
 	$data = msgpack_pack( $data );
 
 	// echo $data , PHP_EOL;
-	// file_put_contents('data.bin', $data );
+	file_put_contents('/tmp/data.bin', $data );
 }
 
 // $data = file_get_contents('../data.bin');
 $data = msgpack_unpack( $data);
-var_dump($data); 
+print_r($data); 
