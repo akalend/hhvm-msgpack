@@ -52,6 +52,30 @@ static void packVariant(const Variant& el);
 
 static void test(const Array& el);
 
+
+/**
+* return true if PHP Array as map
+*/
+static bool checkIsMap(const Array& data) {
+	int i =0;
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+        pos = data->iter_advance(pos)) {
+		const Variant key = data->getKey(pos);
+		if (!key.isInteger()) {
+ 			return true;
+		}
+		if ( key.toInt64() != i) {
+			return true;
+		}
+
+		i++;
+	}
+
+	return false;
+}
+
+
+
 static int sizeof_pack( const Array& data ) {
 		
 	int size = 0;
@@ -70,11 +94,13 @@ static int sizeof_pack( const Array& data ) {
 				break; 
 			}
 			
+			case KindOfPersistentString:
 			case KindOfString : {
 				size += mp_sizeof_str( el.toString().length());
 				break;
 			}
 
+			case KindOfPersistentArray :
 			case KindOfArray : {
 				size += mp_sizeof_array( el.toArray().size() );
 				int arr_size = sizeof_pack( el.toArray() );
@@ -113,20 +139,44 @@ static void encodeArrayElement(const Variant& key, const Variant& val) {
 	packVariant(val); 
 }
 
-
 static void test(const Array& data) {
 	printf( "call %s:%d\n", __FUNCTION__, __LINE__);
 
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-		       pos = data->iter_advance(pos)) {
-		       const Variant key = data->getKey(pos);
-		   	   
-		   	   if (key.isString())
-		   	   		printf("key : [%s]\n", key.toString().c_str());
-		   	   else if (key.isInteger())
-		   	    		printf("key : [%ld]\n", key.toInt64());
-		   	    else 
-		   	    	printf("unknow type: %d",  (int)key.getType());
+       pos = data->iter_advance(pos)) {
+       const Variant key = data->getKey(pos);
+   	   
+   	   if (key.isString())
+   	   		printf("key : [%s]\t", key.toString().c_str());
+   	   else if (key.isInteger())
+   	    		printf("key : [%ld]\t", key.toInt64());
+   	    else 
+   	    	printf("unknow type: %d",  (int)key.getType());
+
+   	    const Variant val = data->getValue(pos);
+   	    
+   	   if (val.isString())
+   	   		printf(" => [%s]\n", val.toString().c_str());
+   	   else if (val.isInteger())
+   	    		printf(" => [%ld]\n", val.toInt64());
+   	   else if (val.isDouble())
+   	    		printf(" => [%f]\n", val.toDouble());
+   	   else if (val.isBoolean())
+   	    		printf(" => %s\n" , val.toBoolean() ? "true" : "false");
+   	   else if (val.isArray())
+   	    		printf(" => Array\n");
+   	   else if (val.isNull())
+   	    		printf(" => NULL\n");
+   	    else 
+   	    	printf("unknow type: %d\r",  (int)val.getType());
+
+
+
+   	    if (val.isArray()) {
+   	    	test(val.toArray());
+   	    }
+
+
 	}
 
 }
@@ -155,20 +205,21 @@ printf("packVariant type: %d\n", (int)el.getType());
 			break; 
 		}
 
+		case KindOfPersistentString :
 		case KindOfString : {
 			MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
 			break;
 		}
 		
+		case KindOfPersistentArray :
 		case KindOfArray : {
 
 				// тут надо проверить на тип массива,
 				// если это массив без индексов, то сохранить как массив
 			    // иначе сохранить как карту (map)
 
-printf("packVariant Array\n");
-				test( el.toArray() );
-
+				bool isMap = checkIsMap(el.toArray());
+				printf("****** array is %s\n", isMap ? "map" : "list"  );
 
 				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
 				ArrayData* ad = el.toArray().get();
@@ -182,6 +233,7 @@ printf("packVariant Array\n");
 	 	}
 		
 		default : raise_warning("error type of data element");
+					printf("type is %d\n", el.getType());
 	}
 };
 
@@ -319,7 +371,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
 	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
-
+	
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}
