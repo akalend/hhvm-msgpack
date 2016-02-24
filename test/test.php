@@ -1,3 +1,4 @@
+#!/usr/bin/hhvm
 <?php
 /**
 * start without change php.ini   
@@ -5,6 +6,7 @@
 *
 */
 
+<<<<<<< HEAD
 $tests = 
 [
       ['nil', null, "\xc0"],
@@ -108,6 +110,9 @@ foreach ($tests as $item) {
 exit;
 
 $arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];
+=======
+$arr = [ 'Pupkin',  null,  42 , [1,5,'****'], [ 'sss' => 12, 0 => '2333' , 'fff'=> '****', 7 => null ]];
+>>>>>>> develope
 
 if (1) {
 	$data = $arr;
