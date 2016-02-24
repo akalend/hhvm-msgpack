@@ -96,6 +96,7 @@ static int sizeof_pack( const Array& data ) {
 			
 			case KindOfPersistentString:
 			case KindOfString : {
+
 				size += mp_sizeof_str( el.toString().length());
 				break;
 			}
@@ -231,13 +232,7 @@ printf("packVariant type: %d\n", (int)el.getType());
 		case KindOfPersistentArray :
 		case KindOfArray : {
 
-				// тут надо проверить на тип массива,
-				// если это массив без индексов, то сохранить как массив
-			    // иначе сохранить как карту (map)
-
 				bool isMap = checkIsMap(el.toArray());
-				printf("****** array is %s\n", isMap ? "map" : "list"  );
-
 				ArrayData* ad = el.toArray().get();
 				if (isMap) {
 					MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());	
@@ -294,6 +289,14 @@ void unpackElement( char **p, Variant* pout) {
 		case MP_STR : {
 			uint32_t len = 0;
 			const char * res = mp_decode_str(const_cast<const char**>(&pos), &len);
+			*p = pos;
+			*pout = String(StringData::Make( res, len, CopyString ));
+			break;
+		}
+
+		case MP_BIN : {
+			uint32_t len = 0;
+			const char * res = mp_decode_bin(const_cast<const char**>(&pos), &len);
 			*p = pos;
 			*pout = String(StringData::Make( res, len, CopyString ));
 			break;

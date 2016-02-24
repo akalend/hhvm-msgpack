@@ -14,7 +14,7 @@ if (1) {
 	$data = msgpack_pack( $data );
 
 	// echo $data , PHP_EOL;
-	file_put_contents('data.bin', $data );
+	// file_put_contents('data.bin', $data );
 }
 
 // $data = file_get_contents('../data.bin');
