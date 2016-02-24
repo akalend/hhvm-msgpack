@@ -5,6 +5,8 @@
 #include "msgpuck.h"
 
 
+#define BUFFSIZE 4096
+
 namespace HPHP {
 
 static Array HHVM_FUNCTION(msgpack_unpack, const String& data);
