@@ -1,3 +1,4 @@
+#!/usr/bin/hhvm
 <?php
 /**
 * start without change php.ini   
@@ -5,7 +6,7 @@
 *
 */
 
-$arr = [ 'Pupkin',  null,  42 , [1,5,'****'], [ 'sss' => 12, 0 => '2333'  ]];
+$arr = [ 'Pupkin',  null,  42 , [1,5,'****'], [ 'sss' => 12, 0 => '2333' , 'fff'=> '****', 7 => null ]];
 
 if (1) {
 	$data = $arr;
@@ -13,7 +14,7 @@ if (1) {
 	$data = msgpack_pack( $data );
 
 	// echo $data , PHP_EOL;
-	// file_put_contents('data.bin', $data );
+	file_put_contents('data.bin', $data );
 }
 
 // $data = file_get_contents('../data.bin');

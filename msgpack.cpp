@@ -102,6 +102,7 @@ static int sizeof_pack( const Array& data ) {
 
 			case KindOfPersistentArray :
 			case KindOfArray : {
+
 				size += mp_sizeof_array( el.toArray().size() );
 				int arr_size = sizeof_pack( el.toArray() );
 				size += arr_size;
@@ -124,20 +125,36 @@ static int sizeof_pack( const Array& data ) {
 	return size;
 }
 
-static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant& , const Variant&)) {
+static void mapIteration(ArrayData* data, void  (mapIterationCb) (const Variant& , const Variant&)) {
 
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
 	       pos = data->iter_advance(pos)) {
 	       const Variant key = data->getKey(pos);
 	   	   const Variant val = data->getValue(pos);
-	   	   arrayIterationCb(key, val);
+	   	   mapIterationCb(key, val);
 	}
 }
 
-static void encodeArrayElement(const Variant& key, const Variant& val) {
+
+static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant&)) {
+
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+	       pos = data->iter_advance(pos)) {
+	   	   const Variant val = data->getValue(pos);
+	   	   arrayIterationCb(val);
+	}
+}
+
+static void encodeMapElement(const Variant& key, const Variant& val) {
 	packVariant(key);
 	packVariant(val); 
 }
+
+static void encodeArrayElement(const Variant& val) {
+	packVariant(val); 
+}
+
+
 
 static void test(const Array& data) {
 	printf( "call %s:%d\n", __FUNCTION__, __LINE__);
@@ -221,9 +238,16 @@ printf("packVariant type: %d\n", (int)el.getType());
 				bool isMap = checkIsMap(el.toArray());
 				printf("****** array is %s\n", isMap ? "map" : "list"  );
 
-				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
 				ArrayData* ad = el.toArray().get();
-				arrayIteration(ad, encodeArrayElement);
+				if (isMap) {
+					MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());	
+					mapIteration(ad, encodeMapElement);
+				} else {
+					MsgpackExtension::BufferPtr = mp_encode_array(MsgpackExtension::BufferPtr, el.toArray().length());
+					arrayIteration(ad, encodeArrayElement);
+
+				}
+
 				break; 
 			}
 
