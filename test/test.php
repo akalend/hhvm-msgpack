@@ -105,16 +105,7 @@ foreach ($tests as $item) {
       
 }
 
-die();
-
-
-foreach ($data as $item) {
-	print_r($item);
-}
-
-
-
-var_dump($data);
+exit;
 
 $arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];
 
