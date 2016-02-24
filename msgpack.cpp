@@ -50,13 +50,12 @@ static int sizeof_pack( const Array& data ) {
 				break; 
 			}
 			
-			case KindOfPersistentString:
+			case KindOfStaticString:
 			case KindOfString : {
 				size += mp_sizeof_str( el.toString().length());
 				break;
 			}
 
-			case KindOfPersistentArray:
 			case KindOfArray : {
 				size += mp_sizeof_array( el.toArray().size() );
 				int arr_size = sizeof_pack( el.toArray() );
@@ -116,13 +115,12 @@ static void packVariant(const Variant& el) {
 			break; 
 		}
 
-		case KindOfPersistentString:
+		case KindOfStaticString:
 		case KindOfString : {
 			MsgpackExtension::BufferPtr = mp_encode_str(MsgpackExtension::BufferPtr, el.toString().c_str(), el.toString().length());
 			break;
 		}
 		
-		case KindOfPersistentArray:
 		case KindOfArray : {
 
 				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());
