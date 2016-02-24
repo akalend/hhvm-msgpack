@@ -202,9 +202,6 @@ static void test(const Array& data) {
 
 static void packVariant(const Variant& el) {
 		
-
-printf("packVariant type: %d\n", (int)el.getType());
-
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
@@ -398,6 +395,8 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
 	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
+	// тут надо найти длинну пакета и выделить под него буфер
+
 	
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
