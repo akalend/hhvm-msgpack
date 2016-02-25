@@ -184,7 +184,7 @@ static void packVariant(const Variant& el) {
 	 	}
 		
 		default : raise_warning("error type of data element");
-					printf("type is %d\n", el.getType());
+					// printf("type is %d\n", el.getType());
 	}
 };
 
@@ -356,7 +356,7 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	}
 	int count = mp_decode_array( const_cast<const char**>(&p));
 
-	printf("elements %d\n", count);
+	// printf("elements %d\n", count);
 
 	for (int i =0; i < count; i++) {
 		Variant el;
