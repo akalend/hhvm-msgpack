@@ -30,7 +30,7 @@ namespace HPHP {
 
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
-
+static int sizeof_pack( const Array& data );
 
 /**
 * return true if PHP Array as map
@@ -40,7 +40,7 @@ static bool checkIsMap(const Array& data) {
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
         pos = data->iter_advance(pos)) {
 		const Variant key = data->getKey(pos);
-		if (!key.isInteger()) {
+		if (key.isInteger() != true) {
  			return true;
 		}
 		if ( key.toInt64() != i) {
@@ -53,6 +53,72 @@ static bool checkIsMap(const Array& data) {
 	return false;
 }
 
+static int sizeof_array(const Array& arr) {
+    ArrayData* data = arr.get();
+	int len = 0;
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+	       pos = data->iter_advance(pos)) {
+	   	   const Variant val = data->getValue(pos);
+	   	   len += sizeof_pack(val.toArray());
+	}
+
+	return len;
+}
+
+
+static int sizeof_el( const Variant& el ) {
+    int size = 0;
+    		switch(el.getType()) {
+
+    			case KindOfInt64 : {
+    				size += mp_sizeof_int( el.toInt64() );
+    				break;
+    			}
+
+    			case KindOfNull : {
+    				size += mp_sizeof_nil();
+    				break;
+    			}
+
+    			case KindOfPersistentString:
+    			case KindOfString : {
+
+    				size += mp_sizeof_str( el.toString().length());
+    				break;
+    			}
+
+    			case KindOfPersistentArray :
+    			case KindOfArray : {
+
+    				bool isMap = checkIsMap(el.toArray());
+    				if (isMap) {
+                        size += mp_sizeof_map( el.toArray().size() );
+
+                        int arr_size = sizeof_array(el.toArray());
+                        size += arr_size;
+
+    				} else {
+                        size += mp_sizeof_array( el.toArray().size() );
+                        int arr_size = sizeof_pack( el.toArray() );
+                        size += arr_size ;
+    				}
+    				break;
+    			}
+
+    			case KindOfDouble :
+    				size += mp_sizeof_float(el.toDouble());
+    				break;
+
+    			case KindOfBoolean :
+    				size += mp_sizeof_bool(el.toBoolean());
+    				break;
+
+
+    			default : g_context->write( "wrong type\n");
+    		}
+
+    return size;
+}
 
 static int sizeof_pack( const Array& data ) {
 		
@@ -60,45 +126,7 @@ static int sizeof_pack( const Array& data ) {
 
 	for (int i=0; i < data.length(); i++) {
 		Variant el(data[i]);
-		switch(el.getType()) {
-			
-			case KindOfInt64 : {
-				size += mp_sizeof_int( el.toInt64() ); 
-				break; 
-			}
-			
-			case KindOfNull : {
-				size += mp_sizeof_nil();
-				break; 
-			}
-			
-			case KindOfPersistentString:
-			case KindOfString : {
-
-				size += mp_sizeof_str( el.toString().length());
-				break;
-			}
-
-			case KindOfPersistentArray :
-			case KindOfArray : {
-
-				size += mp_sizeof_array( el.toArray().size() );
-				int arr_size = sizeof_pack( el.toArray() );
-				size += arr_size;
-				break; 
-			}
-
-			case KindOfDouble : 
-				size += mp_sizeof_float(el.toDouble());
-				break;
-		 
-			case KindOfBoolean : 
-				size += mp_sizeof_bool(el.toBoolean());
-				break;
-
-
-			default : g_context->write( "wrong\n");
-		}
+        size += sizeof_el(el);
 	}
 
 	return size;
@@ -305,16 +333,18 @@ void MsgpackExtension::moduleInit() {
 
 void MsgpackExtension::moduleShutdown() {
 
+	printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
+
 	free(MsgpackExtension::Buffer);
-	// printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
+	// MsgpackExtension::Buffer = NULL;
 }
 
 
 //////////////////    static    /////////////////////////
 int MsgpackExtension::BufferSize = 0;
-int MsgpackExtension::Level = 0;
 void* MsgpackExtension::Buffer = NULL;
 char* MsgpackExtension::BufferPtr = NULL;
+
 
 
 static MsgpackExtension s_msgpack_extension;
@@ -326,17 +356,30 @@ static MsgpackExtension s_msgpack_extension;
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-	MsgpackExtension::Level = 0;	
+	// тут надо найти длинну пакета и выделить под него буфер
+	int pkg_len = sizeof_pack(data);
+	printf("package is len %d  BufferSize=%d\n", pkg_len, MsgpackExtension::BufferSize);
+
+	if (pkg_len > MsgpackExtension::BufferSize) {
+		free(MsgpackExtension::Buffer);
+		MsgpackExtension::BufferSize = pkg_len + 256;
+		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
+		printf("***** reallock to %d\n", MsgpackExtension::BufferSize);
+
+		if (MsgpackExtension::Buffer == NULL) {
+			raise_error("not engort memory");
+		}
+
+	}
+
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
 	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
-	// тут надо найти длинну пакета и выделить под него буфер
 
-	
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}
-	size_t len = reinterpret_cast<uint64_t>(MsgpackExtension::BufferPtr) - reinterpret_cast<uint64_t>(MsgpackExtension::Buffer);
+	size_t len = static_cast<size_t>(reinterpret_cast<uint64_t>(MsgpackExtension::BufferPtr) - reinterpret_cast<uint64_t>(MsgpackExtension::Buffer));
 
 	StringData* str =  StringData::Make(reinterpret_cast<const char*>(MsgpackExtension::Buffer), len, CopyString);
 

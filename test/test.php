@@ -86,12 +86,16 @@ $tests =
 
 
 $i = 0;
+$j = 0;
 foreach ($tests as $item) {
-	
-      
-      if (strlen($item[2]) > 4096) {
-            echo $item[0], "\t\t",' lenght fail', PHP_EOL;
-      }
+
+break;	
+      $len = strlen($item[2]);
+      //echo "{$item[0]}: data len $len\n";
+    //   if ($len > 4096) {
+    //         echo $item[0], "\t\t lenght [$len] fail\n";
+		  // continue;
+    //   }
 
       $data = msgpack_pack( [$item[1]]);
       
@@ -100,10 +104,28 @@ foreach ($tests as $item) {
       
 
       if($cmp_data == bin2hex($item[2])) 
-            echo $item[0], "\t\t",' Ok', PHP_EOL;
+            echo $item[0], " len={$len}\t\t",' Ok', PHP_EOL;
       else 
-            echo $item[0], "\t\t",' No', PHP_EOL;
+            echo $item[0], " len={$len}\t\t",' No', PHP_EOL;
+
+      // if ($len > 4096) {
+      //         $j ++;
+      //         if ($j > 3)
+      //             break;
+      // }
+
       
 }
+
+// echo "fix map #3\n";
+
+// $arr = ["\x80" => 0xffff, "\x81" => 0xffff];
+// $data = msgpack_pack($arr);
+// var_dump($arr, msgpack_unpack($data));
+
+$arr = array_fill(1, 5, 0x05);
+$data = msgpack_pack($arr);
+var_dump($arr, msgpack_unpack($data));
+
 
 

@@ -20,4 +20,4 @@ if (1) {
 
 // $data = file_get_contents('../data.bin');
 $data = msgpack_unpack( $data);
-var_dump($data); 
+var_dump($data);
