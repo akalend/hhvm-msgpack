@@ -30,7 +30,8 @@ namespace HPHP {
 
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
-static int sizeof_pack( const Array& data );
+static int sizeof_pack(const Array& data);
+static int sizeof_el(const Variant& el);
 
 /**
 * return true if PHP Array as map
@@ -53,13 +54,20 @@ static bool checkIsMap(const Array& data) {
 	return false;
 }
 
-static int sizeof_array(const Array& arr) {
+static int sizeof_array(const Array& arr, bool isMap) {
     ArrayData* data = arr.get();
 	int len = 0;
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-	       pos = data->iter_advance(pos)) {
-	   	   const Variant val = data->getValue(pos);
-	   	   len += sizeof_pack(val.toArray());
+	        pos = data->iter_advance(pos)) {
+	   	    const Variant val = data->getValue(pos);
+	   		int keylen = 0;
+	   		
+	   		if (isMap) {
+				const Variant key = data->getKey(pos);
+				keylen = sizeof_el(key);
+	   		}
+
+	   	   len += sizeof_el(val) + keylen;
 	}
 
 	return len;
@@ -94,11 +102,11 @@ static int sizeof_el( const Variant& el ) {
     				if (isMap) {
                         size += mp_sizeof_map( el.toArray().size() );
 
-                        int arr_size = sizeof_array(el.toArray());
+                        int arr_size = sizeof_array(el.toArray(), isMap);
                         size += arr_size;
 
     				} else {
-                        size += mp_sizeof_array( el.toArray().size() );
+                        size += mp_sizeof_array(el.toArray().size());
                         int arr_size = sizeof_pack( el.toArray() );
                         size += arr_size ;
     				}
@@ -114,7 +122,7 @@ static int sizeof_el( const Variant& el ) {
     				break;
 
 
-    			default : g_context->write( "wrong type\n");
+    			default : printf(" wrong type %d\n", el.getType() );
     		}
 
     return size;
@@ -168,10 +176,11 @@ static void packVariant(const Variant& el) {
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
-			if (int_val >= 0)
+			if (int_val >= 0) {
 				MsgpackExtension::BufferPtr = mp_encode_uint(MsgpackExtension::BufferPtr,  int_val );
-			else
+			} else {
 				MsgpackExtension::BufferPtr = mp_encode_int(MsgpackExtension::BufferPtr,  int_val );
+			}
 			break; }
 		
 		case KindOfNull : { 
@@ -200,7 +209,6 @@ static void packVariant(const Variant& el) {
 				} else {
 					MsgpackExtension::BufferPtr = mp_encode_array(MsgpackExtension::BufferPtr, el.toArray().length());
 					arrayIteration(ad, encodeArrayElement);
-
 				}
 
 				break; 
@@ -362,7 +370,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	if (pkg_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
-		MsgpackExtension::BufferSize = pkg_len + 256;
+		MsgpackExtension::BufferSize = pkg_len * 3;
 		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
 		printf("***** reallock to %d\n", MsgpackExtension::BufferSize);
 

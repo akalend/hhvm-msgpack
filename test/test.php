@@ -123,9 +123,10 @@ break;
 // $data = msgpack_pack($arr);
 // var_dump($arr, msgpack_unpack($data));
 
-$arr = array_fill(1, 5, 0x05);
+$arr = [array_fill(1, 0xffff, 0x05)];
 $data = msgpack_pack($arr);
-var_dump($arr, msgpack_unpack($data));
+echo "len=", strlen($data),PHP_EOL ;
+// var_dump($arr, msgpack_unpack($data));
 
 
 
