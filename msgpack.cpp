@@ -28,6 +28,24 @@
 namespace HPHP {
 
 
+/*
+
+								 //       |||
+  KindOfUninit          = 0x00,  //  00000000    0
+  KindOfNull            = 0x01,  //  00000001    1
+  KindOfBoolean         = 0x09,  //  00001001   11
+  KindOfInt64           = 0x11,  //  00010001 	17
+  KindOfDouble          = 0x19,  //  00011001	25
+  KindOfPersistentString = 0x1b, //  00011011	27
+  KindOfPersistentArray = 0x1d,  //  00011101	29
+  KindOfString          = 0x22,  //  00100010	34
+  KindOfArray           = 0x34,  //  00110100	52
+  KindOfObject          = 0x40,  //  01000000	64
+
+
+*/
+
+
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
 static int sizeof_pack(const Array& data);
@@ -39,10 +57,10 @@ static int sizeof_el(const Variant& el);
 static bool checkIsMap(const Array& data) {
 	int i =0;
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-        pos = data->iter_advance(pos)) {
+		pos = data->iter_advance(pos)) {
 		const Variant key = data->getKey(pos);
 		if (key.isInteger() != true) {
- 			return true;
+			return true;
 		}
 		if ( key.toInt64() != i) {
 			return true;
@@ -55,86 +73,92 @@ static bool checkIsMap(const Array& data) {
 }
 
 static int sizeof_array(const Array& arr, bool isMap) {
-    ArrayData* data = arr.get();
+	ArrayData* data = arr.get();
 	int len = 0;
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-	        pos = data->iter_advance(pos)) {
-	   	    const Variant val = data->getValue(pos);
-	   		int keylen = 0;
-	   		
-	   		if (isMap) {
-				const Variant key = data->getKey(pos);
+			pos = data->iter_advance(pos)) {
+			const Variant val = data->getValue(pos);
+			int keylen = 0;
+			
+			const Variant key = data->getKey(pos);
+			if (isMap) {				
 				keylen = sizeof_el(key);
-	   		}
+			}
 
-	   	   len += sizeof_el(val) + keylen;
+			int ll = sizeof_el(val);
+			len += ll + keylen;
+			printf("val [%d] len=%d + %d  typ=%d/%d\n", len,ll, keylen, val.getType(), key.getType());
+
 	}
 
+	printf("return %d\n", len);
 	return len;
 }
 
 
 static int sizeof_el( const Variant& el ) {
-    int size = 0;
-    		switch(el.getType()) {
+	int size = 0;
+			switch(el.getType()) {
 
-    			case KindOfInt64 : {
-    				size += mp_sizeof_int( el.toInt64() );
-    				break;
-    			}
+				case KindOfInt64 : {
+					size += mp_sizeof_int( el.toInt64() );
+					break;
+				}
 
-    			case KindOfNull : {
-    				size += mp_sizeof_nil();
-    				break;
-    			}
+				case KindOfNull : {
+					size += mp_sizeof_nil();
+					break;
+				}
 
-    			case KindOfPersistentString:
-    			case KindOfString : {
+				case KindOfPersistentString:
+				case KindOfString : {
 
-    				size += mp_sizeof_str( el.toString().length());
-    				break;
-    			}
+					size += mp_sizeof_str( el.toString().length());
+					break;
+				}
 
-    			case KindOfPersistentArray :
-    			case KindOfArray : {
+				case KindOfPersistentArray :
+				case KindOfArray : {
 
-    				bool isMap = checkIsMap(el.toArray());
-    				if (isMap) {
-                        size += mp_sizeof_map( el.toArray().size() );
+					bool isMap = checkIsMap(el.toArray());
+					if (isMap) {
+						size += mp_sizeof_map( el.toArray().size() );
+						size += sizeof_array(el.toArray(), isMap);
 
-                        int arr_size = sizeof_array(el.toArray(), isMap);
-                        size += arr_size;
+					} else {
+						size += mp_sizeof_array(el.toArray().size());
+						size += sizeof_array( el.toArray(),isMap);
+					}
+					break;
+				}
 
-    				} else {
-                        size += mp_sizeof_array(el.toArray().size());
-                        int arr_size = sizeof_pack( el.toArray() );
-                        size += arr_size ;
-    				}
-    				break;
-    			}
+				case KindOfDouble :
+					size += mp_sizeof_float(el.toDouble());
+					break;
 
-    			case KindOfDouble :
-    				size += mp_sizeof_float(el.toDouble());
-    				break;
-
-    			case KindOfBoolean :
-    				size += mp_sizeof_bool(el.toBoolean());
-    				break;
+				case KindOfBoolean :
+					size += mp_sizeof_bool(el.toBoolean());
+					break;
 
 
-    			default : printf(" wrong type %d\n", el.getType() );
-    		}
+				default : printf(" wrong type %d\n", el.getType() );
+			}
 
-    return size;
+			printf("el=%d len=%d\n", el.getType(), size);
+	return size;
 }
 
 static int sizeof_pack( const Array& data ) {
 		
 	int size = 0;
 
-	for (int i=0; i < data.length(); i++) {
-		Variant el(data[i]);
-        size += sizeof_el(el);
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+		pos = data->iter_advance(pos)) {
+		const Variant key = data->getKey(pos);
+		const Variant val = data->getValue(pos);
+		
+		size += sizeof_el(val) + mp_sizeof_int(key.toInt64());
+		printf("iterate size %d\n",size );
 	}
 
 	return size;
@@ -143,10 +167,10 @@ static int sizeof_pack( const Array& data ) {
 static void mapIteration(ArrayData* data, void  (mapIterationCb) (const Variant& , const Variant&)) {
 
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-	       pos = data->iter_advance(pos)) {
-	       const Variant key = data->getKey(pos);
-	   	   const Variant val = data->getValue(pos);
-	   	   mapIterationCb(key, val);
+		   pos = data->iter_advance(pos)) {
+		   const Variant key = data->getKey(pos);
+		   const Variant val = data->getValue(pos);
+		   mapIterationCb(key, val);
 	}
 }
 
@@ -154,9 +178,9 @@ static void mapIteration(ArrayData* data, void  (mapIterationCb) (const Variant&
 static void arrayIteration(ArrayData* data, void  (arrayIterationCb) (const Variant&)) {
 
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-	       pos = data->iter_advance(pos)) {
-	   	   const Variant val = data->getValue(pos);
-	   	   arrayIterationCb(val);
+		   pos = data->iter_advance(pos)) {
+		   const Variant val = data->getValue(pos);
+		   arrayIterationCb(val);
 	}
 }
 
@@ -217,7 +241,7 @@ static void packVariant(const Variant& el) {
 		case KindOfDouble : {
 			MsgpackExtension::BufferPtr = mp_encode_double(MsgpackExtension::BufferPtr, el.toDouble());
 			break;
-	 	}
+		}
 		
 		default : raise_warning("error type of data element");
 					// printf("type is %d\n", el.getType());
@@ -366,7 +390,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	// тут надо найти длинну пакета и выделить под него буфер
 	int pkg_len = sizeof_pack(data);
-	printf("package is len %d  BufferSize=%d\n", pkg_len, MsgpackExtension::BufferSize);
+	printf("package is len %d\n", pkg_len);
 
 	if (pkg_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
@@ -402,7 +426,7 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	char c = *p;
 
 	if ( mp_typeof(c) != MP_ARRAY ) {
- 		raise_warning("the root element must be array");
+		raise_warning("the root element must be array");
 		return ret;
 	}
 	int count = mp_decode_array( const_cast<const char**>(&p));

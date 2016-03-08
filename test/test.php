@@ -98,15 +98,16 @@ break;
     //   }
 
       $data = msgpack_pack( [$item[1]]);
+      $len2 = strlen($data);
       
       $cmp_data = bin2hex (substr($data,1));
 
       
 
       if($cmp_data == bin2hex($item[2])) 
-            echo $item[0], " len={$len}\t\t",' Ok', PHP_EOL;
+            echo $item[0], " len={$len}/$len2\t\t",' Ok', PHP_EOL;
       else 
-            echo $item[0], " len={$len}\t\t",' No', PHP_EOL;
+            echo $item[0], " len={$len}/$len2\t\t",' No', PHP_EOL;
 
       // if ($len > 4096) {
       //         $j ++;
@@ -122,11 +123,13 @@ break;
 // $arr = ["\x80" => 0xffff, "\x81" => 0xffff];
 // $data = msgpack_pack($arr);
 // var_dump($arr, msgpack_unpack($data));
+$arr = [1 => [[1 => 2, 3 => 4], [1 => null]], 2 => 1, 3 => [false, 'def'], 4 => [0x100000000 => 'a', 0xffffffff => 'b']];
+$res = "\x84\x01\x92\x82\x01\x02\x03\x04\x81\x01\xc0\x02\x01\x03\x92\xc2\xa3\x64\x65\x66\x04\x82\xcf\x00\x00\x00\x01\x00\x00\x00\x00\xa1\x61\xce\xff\xff\xff\xff\xa1\x62";
+// $arr = array_fill(1, 0xffff, 0x05);
+print_r($arr);
 
-$arr = [array_fill(1, 0xffff, 0x05)];
 $data = msgpack_pack($arr);
-echo "len=", strlen($data),PHP_EOL ;
-// var_dump($arr, msgpack_unpack($data));
-
+echo "len=", strlen($data), ' test data:' ,strlen($res),  PHP_EOL ;
+ 
 
 
