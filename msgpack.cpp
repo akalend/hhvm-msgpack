@@ -87,11 +87,11 @@ static int sizeof_array(const Array& arr, bool isMap) {
 
 			int ll = sizeof_el(val);
 			len += ll + keylen;
-			printf("val [%d] len=%d + %d  typ=%d/%d\n", len,ll, keylen, val.getType(), key.getType());
+			// printf("val [%d] len=%d + %d  typ=%d/%d\n", len,ll, keylen, val.getType(), key.getType());
 
 	}
 
-	printf("return %d\n", len);
+	// printf("return %d\n", len);
 	return len;
 }
 
@@ -144,7 +144,7 @@ static int sizeof_el( const Variant& el ) {
 				default : printf(" wrong type %d\n", el.getType() );
 			}
 
-			printf("el=%d len=%d\n", el.getType(), size);
+			// printf("el=%d len=%d\n", el.getType(), size);
 	return size;
 }
 
@@ -158,7 +158,7 @@ static int sizeof_pack( const Array& data ) {
 		const Variant val = data->getValue(pos);
 		
 		size += sizeof_el(val) + mp_sizeof_int(key.toInt64());
-		printf("iterate size %d\n",size );
+		// printf("iterate size %d\n",size );
 	}
 
 	return size;
@@ -365,10 +365,10 @@ void MsgpackExtension::moduleInit() {
 
 void MsgpackExtension::moduleShutdown() {
 
-	printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
+	// printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
 
 	free(MsgpackExtension::Buffer);
-	// MsgpackExtension::Buffer = NULL;
+	MsgpackExtension::Buffer = NULL;
 }
 
 
@@ -390,7 +390,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	// тут надо найти длинну пакета и выделить под него буфер
 	int pkg_len = sizeof_pack(data);
-	printf("package is len %d\n", pkg_len);
+	// printf("package is len %d\n", pkg_len);
 
 	if (pkg_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
@@ -405,9 +405,8 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	}
 
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
-	MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
+	//MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
-
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}
@@ -423,21 +422,32 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	Array ret = Array::Create();
 
 	char * p = const_cast<char *>(data.c_str());
-	char c = *p;
+	// char c = *p;
+	int len = 0;
+	int i=0;
 
-	if ( mp_typeof(c) != MP_ARRAY ) {
-		raise_warning("the root element must be array");
-		return ret;
+	char * p0;
+
+
+	printf("parse len=%d\n", data.length());
+	p0 = p;
+	while(len < data.length() ) {
+		len +=  abs((long int )p0 - (long int )p);
+		printf("iter: len=%d\n", len);
+		Variant el;
+		unpackElement(&p, &el);
+		ret.set(i++, el);
 	}
-	int count = mp_decode_array( const_cast<const char**>(&p));
+
+	//int count = mp_decode_array( const_cast<const char**>(&p));
 
 	// printf("elements %d\n", count);
 
-	for (int i =0; i < count; i++) {
-		Variant el;
-		unpackElement(&p, &el);
-		ret.set(i, el);
-	}
+	// for (int i =0; i < count; i++) {
+	// 	Variant el;
+	// 	unpackElement(&p, &el);
+	// 	ret.set(i, el);
+	// }
 
 	return  ret;
 }
