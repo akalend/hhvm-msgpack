@@ -89,11 +89,6 @@ $i = 0;
 $j = 0;
 foreach ($tests as $item) {
       $len = strlen($item[2]);
-      //echo "{$item[0]}: data len $len\n";
-    //   if ($len > 4096) {
-    //         echo $item[0], "\t\t lenght [$len] fail\n";
-		  // continue;
-    //   }
 
       $data = msgpack_pack( [$item[1]]);
       $len2 = strlen($data);
@@ -106,10 +101,11 @@ foreach ($tests as $item) {
       else 
             echo $item[0], " len={$len}/{$len2}\t\t",' No', PHP_EOL;
 
-      // if ($item[0] == 'fix map #3') { 
+      // if ($item[0] == 'complex map') { 
       //       echo "$cmp_data\n";
       //       echo bin2hex($item[2]), "\n";
-      //       var_dump($item[1], msgpack_unpack($data));
+      //       print_r($item[1]);
+      //       print_r(msgpack_unpack($data)[0]);
       // }
 
 
@@ -130,24 +126,5 @@ var_dump($arr, msgpack_unpack($data)[0]);
 echo bin2hex ($data), PHP_EOL;
 echo bin2hex ("\x81\xc4\x01\x80\xcd\xff\xff"), PHP_EOL;
 
-
-
-// $arr = [1 => [[1 => 2, 3 => 4], [1 => null]], 2 => 1, 3 => [false, 'def'], 4 => [0x100000000 => 'a', 0xffffffff => 'b']];
-// $res = "\x84\x01\x92\x82\x01\x02\x03\x04\x81\x01\xc0\x02\x01\x03\x92\xc2\xa3\x64\x65\x66\x04\x82\xcf\x00\x00\x00\x01\x00\x00\x00\x00\xa1\x61\xce\xff\xff\xff\xff\xa1\x62";
-// $arr = array_fill(1, 0xffff, 0x05);
-
-
-
- // var_dump(msgpack_unpack("\x81\xc4\x01\x80\xcd\xff\xff"));
-
-// $data = msgpack_pack($arr);
-
-      // ['fix map #3', , "\x81\xc4\x01\x80\xcd\xff\xff"],
-
-//echo bin2hex($data),PHP_EOL;
-//echo "len=", strlen($data), ' test data:' ,strlen($res),  PHP_EOL ;
-
-// file_put_contents('data.bin', $data ); 
-// var_dump(msgpack_unpack($data) ) ;
 
 
