@@ -59,7 +59,8 @@ decode(uint32_t* state, uint32_t* codep, uint32_t byte) {
   *state = utf8d[256 + *state*16 + type];
   return *state;
 }
-
+// Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+// See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
 int checkUTF8(uint8_t* s, size_t* count) {
   uint32_t codepoint;
   uint32_t state = 0;
@@ -73,25 +74,6 @@ int checkUTF8(uint8_t* s, size_t* count) {
 
 
 namespace HPHP {
-
-
-/*
-
-								 //       |||
-  KindOfUninit          = 0x00,  //  00000000    0
-  KindOfNull            = 0x01,  //  00000001    1
-  KindOfBoolean         = 0x09,  //  00001001   11
-  KindOfInt64           = 0x11,  //  00010001 	17
-  KindOfDouble          = 0x19,  //  00011001	25
-  KindOfPersistentString = 0x1b, //  00011011	27
-  KindOfPersistentArray = 0x1d,  //  00011101	29
-  KindOfString          = 0x22,  //  00100010	34
-  KindOfArray           = 0x34,  //  00110100	52
-  KindOfObject          = 0x40,  //  01000000	64
-
-
-*/
-
 
 static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
@@ -134,11 +116,8 @@ static int sizeof_array(const Array& arr, bool isMap) {
 
 			int ll = sizeof_el(val);
 			len += ll + keylen;
-			// printf("val [%d] len=%d + %d  typ=%d/%d\n", len,ll, keylen, val.getType(), key.getType());
-
 	}
 
-	// printf("return %d\n", len);
 	return len;
 }
 
@@ -188,10 +167,9 @@ static int sizeof_el( const Variant& el ) {
 					break;
 
 
-				default : printf(" wrong type %d\n", el.getType() );
+				default :
+					raise_warning("wrong type");
 			}
-
-			// printf("el=%d len=%d\n", el.getType(), size);
 	return size;
 }
 
@@ -205,7 +183,6 @@ static int sizeof_pack( const Array& data ) {
 		const Variant val = data->getValue(pos);
 		
 		size += sizeof_el(val) + mp_sizeof_int(key.toInt64());
-		// printf("iterate size %d\n",size );
 	}
 
 	return size;
@@ -301,7 +278,6 @@ static void packVariant(const Variant& el) {
 		}
 		
 		default : raise_warning("error type of data element");
-					// printf("type is %d\n", el.getType());
 	}
 };
 
@@ -422,8 +398,6 @@ void MsgpackExtension::moduleInit() {
 
 void MsgpackExtension::moduleShutdown() {
 
-	// printf("moduleShutdown size=%d\n", MsgpackExtension::BufferSize);
-
 	free(MsgpackExtension::Buffer);
 	MsgpackExtension::Buffer = NULL;
 }
@@ -447,13 +421,11 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	// тут надо найти длинну пакета и выделить под него буфер
 	int pkg_len = sizeof_pack(data);
-	// printf("package is len %d\n", pkg_len);
 
 	if (pkg_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
 		MsgpackExtension::BufferSize = pkg_len * 3;
 		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
-		printf("***** reallock to %d\n", MsgpackExtension::BufferSize);
 
 		if (MsgpackExtension::Buffer == NULL) {
 			raise_error("not engort memory");
@@ -485,27 +457,14 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 
 	char * p0;
 
-
-	printf("parse len=%d\n", data.length());
 	p0 = p;
 	while(len < data.length() ) {		
 		Variant el;
 		unpackElement(&p, &el);
 		ret.set(i++, el);
 		len +=  abs((long int )p0 - (long int )p);
-		printf("iter: len=%d\n", len);
 		p0 = p;
 	}
-
-	//int count = mp_decode_array( const_cast<const char**>(&p));
-
-	// printf("elements %d\n", count);
-
-	// for (int i =0; i < count; i++) {
-	// 	Variant el;
-	// 	unpackElement(&p, &el);
-	// 	ret.set(i, el);
-	// }
 
 	return  ret;
 }
