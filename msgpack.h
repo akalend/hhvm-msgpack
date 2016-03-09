@@ -18,9 +18,9 @@ class MsgpackExtension : public Extension {
 	static int BufferSize;
 	static void* Buffer;
 	static char* BufferPtr;
-	static int Level;
+
 	
-	MsgpackExtension(): Extension("msgpack", "0.1.1") {}
+	MsgpackExtension(): Extension("msgpack", "0.1.2") {}
 
 	void moduleInit() override;
 	void moduleShutdown() override;
