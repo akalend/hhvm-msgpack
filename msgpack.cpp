@@ -59,7 +59,8 @@ decode(uint32_t* state, uint32_t* codep, uint32_t byte) {
   *state = utf8d[256 + *state*16 + type];
   return *state;
 }
-
+// Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+// See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
 int checkUTF8(uint8_t* s, size_t* count) {
   uint32_t codepoint;
   uint32_t state = 0;
@@ -108,18 +109,6 @@ static int sizeof_array(const Array& arr, bool isMap) {
 			const Variant val = data->getValue(pos);
 			int keylen = 0;
 			
-			case KindOfStaticString:
-			case KindOfString : {
-				size += mp_sizeof_str( el.toString().length());
-				break;
-			}
-
-			case KindOfArray : {
-				size += mp_sizeof_array( el.toArray().size() );
-				int arr_size = sizeof_pack( el.toArray() );
-				size += arr_size;
-				break; 
-
 			const Variant key = data->getKey(pos);
 			if (isMap) {				
 				keylen = sizeof_el(key);
@@ -127,11 +116,8 @@ static int sizeof_array(const Array& arr, bool isMap) {
 
 			int ll = sizeof_el(val);
 			len += ll + keylen;
-			// printf("val [%d] len=%d + %d  typ=%d/%d\n", len,ll, keylen, val.getType(), key.getType());
-
 	}
 
-	// printf("return %d\n", len);
 	return len;
 }
 
@@ -181,11 +167,9 @@ static int sizeof_el( const Variant& el ) {
 					break;
 
 
-				default : 
+				default :
 					raise_warning("wrong type");
 			}
-
-			// printf("el=%d len=%d\n", el.getType(), size);
 	return size;
 }
 
@@ -199,7 +183,6 @@ static int sizeof_pack( const Array& data ) {
 		const Variant val = data->getValue(pos);
 		
 		size += sizeof_el(val) + mp_sizeof_int(key.toInt64());
-		// printf("iterate size %d\n",size );
 	}
 
 	return size;
@@ -294,7 +277,6 @@ static void packVariant(const Variant& el) {
 		}
 		
 		default : raise_warning("error type of data element");
-					// printf("type is %d\n", el.getType());
 	}
 };
 
