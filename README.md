@@ -55,3 +55,5 @@ Alexandre Kalendarev - initial author
 Roman Tsisyk [msg-packer https://github.com/rtsisyk/msgpuck]
 
 Bjoern Hoehrmann [utf-8 detect  http://bjoern.hoehrmann.de/utf-8/decoder/dfa/] 
+
+Eugene Leonovich [msgpack tests https://github.com/rybakit/msgpack.php/tree/master/tests]
