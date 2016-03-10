@@ -136,14 +136,13 @@ static int sizeof_el( const Variant& el ) {
 					break;
 				}
 
-				case KindOfPersistentString:
+				case KindOfStaticString:
 				case KindOfString : {
 
 					size += mp_sizeof_str( el.toString().length());
 					break;
 				}
 
-				case KindOfPersistentArray :
 				case KindOfArray : {
 
 					bool isMap = checkIsMap(el.toArray());
