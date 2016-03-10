@@ -97,16 +97,25 @@ foreach ($tests as $item) {
 
 
       if($cmp_data == bin2hex($item[2])) 
-            echo $item[0], " len={$len}/{$len2}\t\t",' Ok', PHP_EOL;
+            echo $item[0], " len={$len}/{$len2}\t\t",' Ok/';
       else 
-            echo $item[0], " len={$len}/{$len2}\t\t",' No', PHP_EOL;
+            echo $item[0], " len={$len}/{$len2}\t\t",' No/';
 
-      // if ($item[0] == 'complex map') { 
-      //       echo "$cmp_data\n";
-      //       echo bin2hex($item[2]), "\n";
-      //       print_r($item[1]);
-      //       print_r(msgpack_unpack($data)[0]);
-      // }
+
+      $data = msgpack_unpack($item[2]);
+      if($data[0] === $item[1]) 
+            echo 'Ok',PHP_EOL;
+      else
+            echo 'No',PHP_EOL;
+
+
+      if ($item[0] == '16-bit map #2') { 
+            break;
+            echo "$cmp_data\n";
+            echo bin2hex($item[2]), "\n";
+            print_r($item[1]);
+            print_r(msgpack_unpack($data)[0]);
+      }
 
 
 }

@@ -453,7 +453,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 		free(MsgpackExtension::Buffer);
 		MsgpackExtension::BufferSize = pkg_len * 3;
 		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
-		printf("***** reallock to %d\n", MsgpackExtension::BufferSize);
+		  printf("***** reallock to %d\n", MsgpackExtension::BufferSize);
 
 		if (MsgpackExtension::Buffer == NULL) {
 			raise_error("not engort memory");
@@ -486,14 +486,14 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	char * p0;
 
 
-	printf("parse len=%d\n", data.length());
+	// printf("parse len=%d\n", data.length());
 	p0 = p;
 	while(len < data.length() ) {		
 		Variant el;
 		unpackElement(&p, &el);
 		ret.set(i++, el);
 		len +=  abs((long int )p0 - (long int )p);
-		printf("iter: len=%d\n", len);
+		// printf("iter: len=%d\n", len);
 		p0 = p;
 	}
 
