@@ -13,9 +13,11 @@
    | license@php.net so we can mail you a copy immediately.               |
    +----------------------------------------------------------------------+
 
-	 part this code was derived from tarantool/msgpuck, author Roman Tsisyk
+	 part this code was derived from:
+	  tarantool/msgpuck, author Roman Tsisyk
+	  utf-8 detect, author Bjoern Hoehrmann
 
-	 for HHVM version 3.13
+	 for HHVM version 3.9
 */
 
 #include "hphp/runtime/ext/extension.h"
