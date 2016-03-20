@@ -89,7 +89,6 @@ int checkUTF8(uint8_t* s, size_t* count) {
 
 namespace HPHP {
 
-static void printVariant(const Variant& data);
 static void packVariant(const Variant& el);
 static int sizeof_pack(const Array& data);
 static int sizeof_el(const Variant& el);
@@ -118,11 +117,8 @@ static bool checkIsMap(const Array& data) {
 }
 
 static void encodeMapElementLen(const Variant& key, const Variant& val, int* len) {
-	//printf("key: pos=%d\n", *len);
 	packVariantLen(key, len);
-	//printf("val: pos=%d\n", *len );
 	packVariantLen(val, len);
-	//printf("\n"); 
 }
 
 static void encodeArrayElementLen(const Variant& val, int* len) {
@@ -132,15 +128,12 @@ static void encodeArrayElementLen(const Variant& val, int* len) {
 
 static void mapIterationLen(ArrayData* data, int* len, void  (mapIterationCb) (const Variant& , const Variant&, int*)) {
 	
-	//printf("map it pos=%d\n", *len);
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
 		   pos = data->iter_advance(pos)) {
 		   const Variant key = data->getKey(pos);
 		   const Variant val = data->getValue(pos);
-		   //printf("pos[%s]=%d ", key.toString().c_str()  ,*len );
 		   mapIterationCb(key, val, len);
 	}
-	//printf("finish pos=%d\n", *len);
 }
 
 
@@ -151,61 +144,10 @@ static void arrayIterationLen(ArrayData* data, int* len,void  (arrayIterationCb)
 		   const Variant val = data->getValue(pos);
 		   arrayIterationCb(val, len);
 	}
-	//printf("arr len =%d\n",*len );
 }
-
-static void printVariant(const Variant& el) {
-		
-	switch(el.getType()) {
-		case KindOfInt64 : { 
-		
-		//printf("[i'%ld]", el.toInt64() );
-			break; }
-		
-		case KindOfNull : { 
-			//printf("[nil]" );
-			break; }
-
-		case KindOfBoolean : { 
-			//printf("[b'%ld]", el.toInt64());
-			break; 
-		}
-
-		case KindOfPersistentString:
-		case KindOfString : {
-
-			//printf("[s'%s]", el.toString().c_str() );
-			break;
-		}
-		
-		case KindOfPersistentArray:
-		case KindOfArray : {
-
-				bool isMap = checkIsMap(el.toArray());
-				if (isMap) {
-					//printf("Map:%ld{ ", el.toArray().length() );					
-				} else {
-					//printf("Arr:%ld{ ", el.toArray().length() );					
-				}
-
-				break; 
-			}
-
-		case KindOfDouble : {
-			//printf("[f'%f]", el.toDouble() );
-			break;
-		}
-		
-
-		default : raise_warning("error type of data element");
-	}
-}
-
 
 static void packVariantLen(const Variant& el, int * len ) {
 	
-	printVariant(el);
-
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 		
@@ -215,17 +157,15 @@ static void packVariantLen(const Variant& el, int * len ) {
 			} else {
 				*len += mp_sizeof_int( el.toInt64() );
 			}
-		//printf("int:%d\n", *len );
+
 			break; }
 		
 		case KindOfNull : { 
 			*len += mp_sizeof_nil();
-			//printf("nil:%d\n", *len );
 			break; }
 
 		case KindOfBoolean : { 
 			*len += mp_sizeof_bool( el.toBoolean() );
-			//printf("bol:%d\n", *len );
 			break; 
 		}
 
@@ -233,7 +173,6 @@ static void packVariantLen(const Variant& el, int * len ) {
 		case KindOfString : {
 
 			*len +=  mp_sizeof_str( el.toString().length() );
-			//printf("str:%d\n", *len );
 			break;
 		}
 		
@@ -243,17 +182,11 @@ static void packVariantLen(const Variant& el, int * len ) {
 				bool isMap = checkIsMap(el.toArray());
 				ArrayData* ad = el.toArray().get();
 				if (isMap) {
-					//printf("map-0 %d\n", *len );
 					*len += mp_sizeof_map(el.toArray().length());
-					//printf("map-1 %d\n", *len );	
 					mapIterationLen(ad, len,encodeMapElementLen);
-					//printf("map-2 %d\n", *len );
 				} else {
-					//printf("arr-0 %d\n", *len );
 					*len += mp_sizeof_array(el.toArray().length());
-					//printf("arr-1 %d\n", *len );
 					arrayIterationLen(ad, len,encodeArrayElementLen);
-					//printf("arr-2 %d\n", *len );
 				}
 
 				break; 
@@ -314,8 +247,6 @@ static void encodeArrayElement(const Variant& val) {
 
 static void packVariant(const Variant& el) {
 	
- // //printf( "pos[%d]=%d\n",el.getType(), abs((int)(MsgpackExtension::BufferPtr - (char*)MsgpackExtension::Buffer)));
-
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
