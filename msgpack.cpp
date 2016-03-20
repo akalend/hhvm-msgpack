@@ -446,8 +446,8 @@ static MsgpackExtension s_msgpack_extension;
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-	// тут надо найти длинну пакета и выделить под него буфер
-	int new_len = BUFFSIZE * ceil( sizeof_pack(data) / (float)BUFFSIZE ); 
+	// the find package len and округляем до кратного BUFFSIZE
+	int new_len = BUFFSIZE * ceil( sizeof_pack(data) / static_cast<float>(BUFFSIZE) ); 
 
 	if (new_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
@@ -488,7 +488,7 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 		Variant el;
 		unpackElement(&p, &el);
 		ret.set(i++, el);
-		len +=  abs((long int )p0 - (long int )p);
+		len +=  abs(reinterpret_cast<int64_t>(p0) - reinterpret_cast<int64_t>(p));
 		p0 = p;
 	}
 
