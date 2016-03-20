@@ -21,7 +21,7 @@ edit the hhvm config files: /etc/hhvm/php.ini
 
 ### Limitation
 	
-	Root element must be array
+	Root element must be array, but is packed as sequence
 
 	Don't support Ext type (msqpack specification ext type)
 
@@ -30,13 +30,6 @@ edit the hhvm config files: /etc/hhvm/php.ini
 		$v = Vector{42,777};
 		$m = Map{'hello' => 'work'};
 		$data = [1, (array)$v, (array)$m ]; // typization to array
-
-
-
-	The common lenght of pack must be less 4096 bytes. If need more, You can change define BUFFSIZE  the line 8 in the msgpack.h (Dynamic memory allocate in TODO list):
-
-		#define BUFFSIZE 4096
-
 
 
 ### Example

@@ -26,3 +26,16 @@
 *.exe
 *.out
 *.app
+
+#IDE
+.idea
+*.xml
+
+#Created files
+CMakeCache.txt
+CMakeFiles/
+CMakeLists.txt
+Makefile
+cmake_install.cmake
+install_manifest.txt
+run-test

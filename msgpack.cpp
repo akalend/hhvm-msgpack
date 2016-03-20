@@ -82,6 +82,8 @@ static void packVariant(const Variant& el);
 static int sizeof_pack(const Array& data);
 static int sizeof_el(const Variant& el);
 
+static void packVariantLen(const Variant& el, int * len );
+
 /**
 * return true if PHP Array as map
 */
@@ -103,76 +105,93 @@ static bool checkIsMap(const Array& data) {
 	return false;
 }
 
-static int sizeof_array(const Array& arr, bool isMap) {
-	ArrayData* data = arr.get();
-	int len = 0;
+static void encodeMapElementLen(const Variant& key, const Variant& val, int* len) {
+	packVariantLen(key, len);
+	packVariantLen(val, len);
+}
+
+static void encodeArrayElementLen(const Variant& val, int* len) {
+	packVariantLen(val, len); 
+}
+
+
+static void mapIterationLen(ArrayData* data, int* len, void  (mapIterationCb) (const Variant& , const Variant&, int*)) {
+	
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-			pos = data->iter_advance(pos)) {
-			const Variant val = data->getValue(pos);
-			int keylen = 0;
-			
-			const Variant key = data->getKey(pos);
-			if (isMap) {				
-				keylen = sizeof_el(key);
-			}
-
-			int ll = sizeof_el(val);
-			len += ll + keylen;
+		   pos = data->iter_advance(pos)) {
+		   const Variant key = data->getKey(pos);
+		   const Variant val = data->getValue(pos);
+		   mapIterationCb(key, val, len);
 	}
+}
 
-	return len;
+static void arrayIterationLen(ArrayData* data, int* len,void  (arrayIterationCb) (const Variant&, int*)) {
+
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+		   pos = data->iter_advance(pos)) {
+		   const Variant val = data->getValue(pos);
+		   arrayIterationCb(val, len);
+	}
 }
 
 
-static int sizeof_el( const Variant& el ) {
-	int size = 0;
-			switch(el.getType()) {
 
-				case KindOfInt64 : {
-					size += mp_sizeof_int( el.toInt64() );
-					break;
-				}
+static void packVariantLen(const Variant& el, int * len ) {
+	
+	printVariant(el);
 
-				case KindOfNull : {
-					size += mp_sizeof_nil();
-					break;
-				}
-
-				case KindOfStaticString:
-				case KindOfString : {
-
-					size += mp_sizeof_str( el.toString().length());
-					break;
-				}
-
-				case KindOfArray : {
-
-					bool isMap = checkIsMap(el.toArray());
-					if (isMap) {
-						size += mp_sizeof_map( el.toArray().size() );
-						size += sizeof_array(el.toArray(), isMap);
-
-					} else {
-						size += mp_sizeof_array(el.toArray().size());
-						size += sizeof_array( el.toArray(),isMap);
-					}
-					break;
-				}
-
-				case KindOfDouble :
-					size += mp_sizeof_float(el.toDouble());
-					break;
-
-				case KindOfBoolean :
-					size += mp_sizeof_bool(el.toBoolean());
-					break;
-
-
-				default :
-					raise_warning("wrong type");
+	switch(el.getType()) {
+		case KindOfInt64 : { 
+		
+			if (int_val >= 0) {
+				*len += mp_sizeof_uint( el.toInt64() );
+			} else {
+				*len += mp_sizeof_int( el.toInt64() );
 			}
-	return size;
+			break; }
+		
+		case KindOfNull : { 
+			*len += mp_sizeof_nil();
+			break; }
+
+		case KindOfBoolean : { 
+			*len += mp_sizeof_bool( el.toBoolean() );
+			break; 
+		}
+
+		case KindOfStaticString:
+		case KindOfString : {
+
+			*len +=  mp_sizeof_str( el.toString().length() );
+			//printf("str:%d\n", *len );
+			break;
+		}
+		
+		case KindOfArray : {
+
+				bool isMap = checkIsMap(el.toArray());
+				ArrayData* ad = el.toArray().get();
+				if (isMap) {
+					*len += mp_sizeof_map(el.toArray().length());
+					mapIterationLen(ad, len,encodeMapElementLen);
+				} else {
+					*len += mp_sizeof_array(el.toArray().length());
+					arrayIterationLen(ad, len,encodeArrayElementLen);
+				}
+
+				break; 
+			}
+
+		case KindOfDouble : {
+			*len = mp_sizeof_double( el.toDouble());
+			break;
+		}
+		
+
+		default : raise_warning("error type of data element");
+	}
 }
+
 
 static int sizeof_pack( const Array& data ) {
 		
@@ -221,7 +240,7 @@ static void encodeArrayElement(const Variant& val) {
 
 
 static void packVariant(const Variant& el) {
-		
+	
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
@@ -279,7 +298,8 @@ static void packVariant(const Variant& el) {
 		
 		default : raise_warning("error type of data element");
 	}
-};
+}
+
 
 void unpackElement( char **p, Variant* pout) {
 
@@ -419,12 +439,13 @@ static MsgpackExtension s_msgpack_extension;
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
-	int pkg_len = sizeof_pack(data);
+	// тут надо найти длинну пакета и выделить под него буфер
+	int new_len = BUFFSIZE * ceil( sizeof_pack(data) / (float)BUFFSIZE ); 
 
-	if (pkg_len > MsgpackExtension::BufferSize) {
+	if (new_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
-		MsgpackExtension::BufferSize = pkg_len * 3;
-		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
+		MsgpackExtension::BufferSize = new_len;
+		MsgpackExtension::Buffer = malloc(new_len);
 
 		if (MsgpackExtension::Buffer == NULL) {
 			raise_error("not engort memory");
@@ -437,6 +458,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}
+
 	size_t len = static_cast<size_t>(reinterpret_cast<uint64_t>(MsgpackExtension::BufferPtr) - reinterpret_cast<uint64_t>(MsgpackExtension::Buffer));
 
 	StringData* str =  StringData::Make(reinterpret_cast<const char*>(MsgpackExtension::Buffer), len, CopyString);
@@ -449,7 +471,6 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	Array ret = Array::Create();
 
 	char * p = const_cast<char *>(data.c_str());
-	// char c = *p;
 	int len = 0;
 	int i=0;
 
