@@ -18,6 +18,18 @@
 		  utf-8 detect, author Bjoern Hoehrmann
 
 	 for HHVM version 3.13
+
+  KindOfUninit          = 0x00,  //  00000000
+  KindOfNull            = 0x01,  //  00000001
+  KindOfBoolean         = 0x09,  //  00001001  9
+  KindOfInt64           = 0x11,  //  00010001 17
+  KindOfDouble          = 0x19,  //  00011001 25
+  KindOfPersistentString = 0x1b, //  00011011 27
+  KindOfPersistentArray = 0x1d,  //  00011101 29
+  KindOfString          = 0x22,  //  00100010 34
+  KindOfArray           = 0x34,  //  00110100 52
+  KindOfObject          = 0x40,  //  01000000
+
 */
 
 #include "hphp/runtime/ext/extension.h"
@@ -82,6 +94,8 @@ static void packVariant(const Variant& el);
 static int sizeof_pack(const Array& data);
 static int sizeof_el(const Variant& el);
 
+static void packVariantLen(const Variant& el, int * len );
+
 /**
 * return true if PHP Array as map
 */
@@ -103,88 +117,165 @@ static bool checkIsMap(const Array& data) {
 	return false;
 }
 
-static int sizeof_array(const Array& arr, bool isMap) {
-	ArrayData* data = arr.get();
-	int len = 0;
+static void encodeMapElementLen(const Variant& key, const Variant& val, int* len) {
+	//printf("key: pos=%d\n", *len);
+	packVariantLen(key, len);
+	//printf("val: pos=%d\n", *len );
+	packVariantLen(val, len);
+	//printf("\n"); 
+}
+
+static void encodeArrayElementLen(const Variant& val, int* len) {
+	packVariantLen(val, len); 
+}
+
+
+static void mapIterationLen(ArrayData* data, int* len, void  (mapIterationCb) (const Variant& , const Variant&, int*)) {
+	
+	//printf("map it pos=%d\n", *len);
 	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-			pos = data->iter_advance(pos)) {
-			const Variant val = data->getValue(pos);
-			int keylen = 0;
-			
-			const Variant key = data->getKey(pos);
-			if (isMap) {				
-				keylen = sizeof_el(key);
-			}
-
-			int ll = sizeof_el(val);
-			len += ll + keylen;
+		   pos = data->iter_advance(pos)) {
+		   const Variant key = data->getKey(pos);
+		   const Variant val = data->getValue(pos);
+		   //printf("pos[%s]=%d ", key.toString().c_str()  ,*len );
+		   mapIterationCb(key, val, len);
 	}
-
-	return len;
+	//printf("finish pos=%d\n", *len);
 }
 
 
-static int sizeof_el( const Variant& el ) {
-	int size = 0;
-			switch(el.getType()) {
+static void arrayIterationLen(ArrayData* data, int* len,void  (arrayIterationCb) (const Variant&, int*)) {
 
-				case KindOfInt64 : {
-					size += mp_sizeof_int( el.toInt64() );
-					break;
+	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
+		   pos = data->iter_advance(pos)) {
+		   const Variant val = data->getValue(pos);
+		   arrayIterationCb(val, len);
+	}
+	//printf("arr len =%d\n",*len );
+}
+
+static void printVariant(const Variant& el) {
+		
+	switch(el.getType()) {
+		case KindOfInt64 : { 
+		
+		//printf("[i'%ld]", el.toInt64() );
+			break; }
+		
+		case KindOfNull : { 
+			//printf("[nil]" );
+			break; }
+
+		case KindOfBoolean : { 
+			//printf("[b'%ld]", el.toInt64());
+			break; 
+		}
+
+		case KindOfPersistentString:
+		case KindOfString : {
+
+			//printf("[s'%s]", el.toString().c_str() );
+			break;
+		}
+		
+		case KindOfPersistentArray:
+		case KindOfArray : {
+
+				bool isMap = checkIsMap(el.toArray());
+				if (isMap) {
+					//printf("Map:%ld{ ", el.toArray().length() );					
+				} else {
+					//printf("Arr:%ld{ ", el.toArray().length() );					
 				}
 
-				case KindOfNull : {
-					size += mp_sizeof_nil();
-					break;
-				}
-
-				case KindOfPersistentString:
-				case KindOfString : {
-
-					size += mp_sizeof_str( el.toString().length());
-					break;
-				}
-
-				case KindOfPersistentArray :
-				case KindOfArray : {
-
-					bool isMap = checkIsMap(el.toArray());
-					if (isMap) {
-						size += mp_sizeof_map( el.toArray().size() );
-						size += sizeof_array(el.toArray(), isMap);
-
-					} else {
-						size += mp_sizeof_array(el.toArray().size());
-						size += sizeof_array( el.toArray(),isMap);
-					}
-					break;
-				}
-
-				case KindOfDouble :
-					size += mp_sizeof_float(el.toDouble());
-					break;
-
-				case KindOfBoolean :
-					size += mp_sizeof_bool(el.toBoolean());
-					break;
-
-
-				default :
-					raise_warning("wrong type");
+				break; 
 			}
-	return size;
+
+		case KindOfDouble : {
+			//printf("[f'%f]", el.toDouble() );
+			break;
+		}
+		
+
+		default : raise_warning("error type of data element");
+	}
 }
+
+
+static void packVariantLen(const Variant& el, int * len ) {
+	
+	printVariant(el);
+
+	switch(el.getType()) {
+		case KindOfInt64 : { 
+		
+			int64_t int_val = el.toInt64();
+			if (int_val >= 0) {
+				*len += mp_sizeof_uint( el.toInt64() );
+			} else {
+				*len += mp_sizeof_int( el.toInt64() );
+			}
+		//printf("int:%d\n", *len );
+			break; }
+		
+		case KindOfNull : { 
+			*len += mp_sizeof_nil();
+			//printf("nil:%d\n", *len );
+			break; }
+
+		case KindOfBoolean : { 
+			*len += mp_sizeof_bool( el.toBoolean() );
+			//printf("bol:%d\n", *len );
+			break; 
+		}
+
+		case KindOfPersistentString:
+		case KindOfString : {
+
+			*len +=  mp_sizeof_str( el.toString().length() );
+			//printf("str:%d\n", *len );
+			break;
+		}
+		
+		case KindOfPersistentArray:
+		case KindOfArray : {
+
+				bool isMap = checkIsMap(el.toArray());
+				ArrayData* ad = el.toArray().get();
+				if (isMap) {
+					//printf("map-0 %d\n", *len );
+					*len += mp_sizeof_map(el.toArray().length());
+					//printf("map-1 %d\n", *len );	
+					mapIterationLen(ad, len,encodeMapElementLen);
+					//printf("map-2 %d\n", *len );
+				} else {
+					//printf("arr-0 %d\n", *len );
+					*len += mp_sizeof_array(el.toArray().length());
+					//printf("arr-1 %d\n", *len );
+					arrayIterationLen(ad, len,encodeArrayElementLen);
+					//printf("arr-2 %d\n", *len );
+				}
+
+				break; 
+			}
+
+		case KindOfDouble : {
+			*len = mp_sizeof_double( el.toDouble());
+			break;
+		}
+		
+
+		default : raise_warning("error type of data element");
+	}
+}
+
 
 static int sizeof_pack( const Array& data ) {
 		
 	int size = 0;
 
-	for (ssize_t pos = data->iter_begin(); pos != data->iter_end();
-		pos = data->iter_advance(pos)) {
-		const Variant key = data->getKey(pos);
-		const Variant val = data->getValue(pos);
-		
-		size += sizeof_el(val) + mp_sizeof_int(key.toInt64());
+	for (int i = 0; i < data.length(); ++i)	{
+		packVariantLen(data[i], &size);
 	}
 
 	return size;
@@ -222,7 +313,9 @@ static void encodeArrayElement(const Variant& val) {
 
 
 static void packVariant(const Variant& el) {
-		
+	
+ // //printf( "pos[%d]=%d\n",el.getType(), abs((int)(MsgpackExtension::BufferPtr - (char*)MsgpackExtension::Buffer)));
+
 	switch(el.getType()) {
 		case KindOfInt64 : { 
 			int64_t int_val = el.toInt64();
@@ -281,7 +374,8 @@ static void packVariant(const Variant& el) {
 		
 		default : raise_warning("error type of data element");
 	}
-};
+}
+
 
 void unpackElement( char **p, Variant* pout) {
 
@@ -422,12 +516,12 @@ static MsgpackExtension s_msgpack_extension;
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	// тут надо найти длинну пакета и выделить под него буфер
-	int pkg_len = sizeof_pack(data);
+	int new_len = BUFFSIZE * ceil( sizeof_pack(data) / (float)BUFFSIZE ); 
 
-	if (pkg_len > MsgpackExtension::BufferSize) {
+	if (new_len > MsgpackExtension::BufferSize) {
 		free(MsgpackExtension::Buffer);
-		MsgpackExtension::BufferSize = pkg_len * 3;
-		MsgpackExtension::Buffer = malloc(MsgpackExtension::BufferSize);
+		MsgpackExtension::BufferSize = new_len;
+		MsgpackExtension::Buffer = malloc(new_len);
 
 		if (MsgpackExtension::Buffer == NULL) {
 			raise_error("not engort memory");
@@ -436,11 +530,11 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 	}
 
 	MsgpackExtension::BufferPtr = static_cast<char*>(MsgpackExtension::Buffer);
-	//MsgpackExtension::BufferPtr = mp_encode_array( MsgpackExtension::BufferPtr, data.length());	
 	
 	for (int i = 0; i < data.length(); ++i)	{
 		packVariant(data[i]);
 	}
+
 	size_t len = static_cast<size_t>(reinterpret_cast<uint64_t>(MsgpackExtension::BufferPtr) - reinterpret_cast<uint64_t>(MsgpackExtension::Buffer));
 
 	StringData* str =  StringData::Make(reinterpret_cast<const char*>(MsgpackExtension::Buffer), len, CopyString);
@@ -453,7 +547,6 @@ static Array HHVM_FUNCTION(msgpack_unpack, const String& data) {
 	Array ret = Array::Create();
 
 	char * p = const_cast<char *>(data.c_str());
-	// char c = *p;
 	int len = 0;
 	int i=0;
 

@@ -90,6 +90,13 @@ $j = 0;
 foreach ($tests as $item) {
       $len = strlen($item[2]);
 
+      // if ($item[0] != '16-bit map #2') continue;
+
+      // if ($item[0] !== 'complex map') { 
+      //       continue;
+      // }
+
+
       $data = msgpack_pack( [$item[1]]);
       $len2 = strlen($data);
       
@@ -108,14 +115,10 @@ foreach ($tests as $item) {
       else
             echo 'No',PHP_EOL;
 
-
-      if ($item[0] == '16-bit map #2') { 
-            break;
-            echo "$cmp_data\n";
-            echo bin2hex($item[2]), "\n";
-            print_r($item[1]);
-            print_r(msgpack_unpack($data)[0]);
-      }
+      echo "------------------\n";
+      // if ($item[0] == 'complex map') { 
+      //       print_r($item[1]);
+      // }
 
 
 }

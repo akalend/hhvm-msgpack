@@ -20,7 +20,7 @@ class MsgpackExtension : public Extension {
 	static char* BufferPtr;
 
 	
-	MsgpackExtension(): Extension("msgpack", "0.1.2") {}
+	MsgpackExtension(): Extension("msgpack", "0.1.3") {}
 
 	void moduleInit() override;
 	void moduleShutdown() override;
