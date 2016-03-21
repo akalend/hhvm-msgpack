@@ -39,6 +39,11 @@ edit the hhvm config files: /etc/hhvm/php.ini
 	...
 	$data = msgpack_unpack( $dencode_data);
 
+### Test
+
+	the run test 
+
+		test/test.php
 
 
 ### Authors
