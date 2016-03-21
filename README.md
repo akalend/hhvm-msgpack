@@ -60,8 +60,35 @@ Don't work with built-in Hack collections (in TODO list). You must make typizati
 The run test: 
 
 		test/test.php
-
-
+							serialize/unserialize
+		-----------------------------------
+		nil len=1/1		 			Ok/Ok
+		false len=1/1		 		Ok/Ok
+		true len=1/1		 		Ok/Ok
+		7-bit uint #1 len=1/1		 Ok/Ok
+		7-bit uint #2 len=1/1		 Ok/Ok
+		7-bit uint #3 len=1/1		 Ok/Ok
+		5-bit sint #1 len=1/1		 Ok/Ok
+		5-bit sint #2 len=1/1		 Ok/Ok
+		5-bit sint #3 len=1/1		 Ok/Ok
+		8-bit uint #1 len=2/2		 Ok/Ok
+		8-bit uint #2 len=2/2		 Ok/Ok
+		8-bit uint #3 len=2/2		 Ok/Ok
+		16-bit uint #1 len=3/3		 Ok/Ok
+		16-bit uint #2 len=3/3		 Ok/Ok
+		16-bit uint #3 len=3/3		 Ok/Ok
+		32-bit uint #1 len=5/5		 Ok/Ok
+		32-bit uint #2 len=5/5		 Ok/Ok
+		32-bit uint #3 len=5/5		 Ok/Ok
+		64-bit uint #1 len=9/9		 Ok/Ok
+		64-bit uint #2 len=9/9		 Ok/Ok
+		8-bit int #1 len=2/2		 Ok/Ok
+		8-bit int #2 len=2/2		 Ok/Ok
+		8-bit int #3 len=2/2		 Ok/Ok
+		...
+		16-bit map #2 len=261761/261761	Ok/Ok
+		32-bit map len=261769/261769	Ok/Ok
+		complex map len=40/40		 	Ok/Ok
 ### Authors
 
 Alexandre Kalendarev - initial author
