@@ -9,9 +9,10 @@ $v = Vector{'one', 2, true };
 $m = Map{"one" => 1, "two" => 2};
 $arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];
 
-$ob = new stdClass();
-$ob->a = 1;
-$ob->b = true;
+	$ob = new stdClass();
+	$ob->a = 1;
+	$ob->b = true;
+	$data = msgpack_pack( $ob );
 
 
 if (1) {

@@ -23,7 +23,23 @@ edit the hhvm config files: /etc/hhvm/php.ini
 	
 	Root element must be array, but is packed as sequence
 
-	Don't support Ext type (msqpack specification ext type)
+	Support Ext (msqpack specification ext type) only for user type = 5 as standart object serialization:
+
+		$ob = new stdClass();
+		$ob->a = 1;
+		$ob->b = true;
+		$data = msgpack_pack( [$ob] ); // rootelement must be array
+  		// ...
+  		$ob = msgpack_unpack($data);
+  		var_dump($ob[0]);
+
+		 object(stdClass)#4 (2) {
+		    ["a"]=>
+		    int(1)
+		    ["b"]=>
+		    bool(true)
+		}
+
 
 	Don't work with built-in Hack collections (in TODO list). You must make typization to array:
 
@@ -41,7 +57,7 @@ edit the hhvm config files: /etc/hhvm/php.ini
 
 ### Test
 
-	the run test 
+The run test: 
 
 		test/test.php
 
