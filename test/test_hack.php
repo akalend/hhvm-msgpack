@@ -9,9 +9,14 @@ $v = Vector{'one', 2, true };
 $m = Map{"one" => 1, "two" => 2};
 $arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];
 
+$ob = new stdClass();
+$ob->a = 1;
+$ob->b = true;
+
+
 if (1) {
-	$data = $arr;
-	print_r($data); 
+	$data = [null,  [1,2,3], $ob, 12, true];
+	var_dump($data); 
 	$data = msgpack_pack( $data );
 
 	// echo $data , PHP_EOL;

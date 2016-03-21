@@ -1512,6 +1512,33 @@ mp_encode_bin(char *data, const char *str, uint32_t len)
 	return data + len;
 }
 
+MP_IMPL char *
+mp_encode_extl(char *data, uint8_t type, uint32_t len)
+{
+	if (len <= UINT8_MAX) {
+		data = mp_store_u8(data, 0xc7);
+		data = mp_store_u8(data, len);
+		return mp_store_u8(data, type);
+
+	} else if (len <= UINT16_MAX) {
+		data = mp_store_u8(data, 0xc8);
+		data = mp_store_u16(data, len);
+		return mp_store_u8(data, type);
+	} else {
+		data = mp_store_u8(data, 0xdb);
+		data = mp_store_u32(data, len);
+		return mp_store_u8(data, type);
+	}
+}
+
+MP_IMPL char *
+mp_encode_ext(char *data, const char *str, uint8_t type, uint32_t len)
+{
+	data = mp_encode_extl(data, type, len);
+	memcpy(data, str, len);
+	return data + len;
+}
+
 MP_IMPL ptrdiff_t
 mp_check_strl(const char *cur, const char *end)
 {
@@ -1592,6 +1619,40 @@ mp_decode_bin(const char **data, uint32_t *len)
 	assert(len != NULL);
 
 	*len = mp_decode_binl(data);
+	const char *str = *data;
+	*data += *len;
+	return str;
+}
+
+MP_IMPL uint32_t
+mp_decode_extl(const char **data, uint32_t *type)
+{
+	uint8_t c = mp_load_u8(data);
+	uint32_t len = 0;
+	switch (c) {
+	case 0xc7:
+		len = mp_load_u8(data);
+		*type = mp_load_u8(data);
+		return len;
+	case 0xc8:
+		len = mp_load_u16(data);
+		*type = mp_load_u8(data);
+		return len;
+	case 0xc9:
+		len = mp_load_u32(data);
+		*type = mp_load_u8(data);
+		return len;
+	default:
+		mp_unreachable();
+	}
+}
+
+MP_IMPL const char *
+mp_decode_ext(const char **data, uint32_t *len, uint32_t *type)
+{
+	assert(len != NULL);
+
+	*len = mp_decode_extl(data, type);
 	const char *str = *data;
 	*data += *len;
 	return str;

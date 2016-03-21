@@ -34,11 +34,17 @@
 
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
+#include "hphp/runtime/base/type-object.h"  	  // Object
+#include "hphp/runtime/base/builtin-functions.h"
+#include "hphp/runtime/base/variable-serializer.h"
+#include "hphp/runtime/base/variable-unserializer.h"
+
 
 #define MP_SOURCE 1
 #include "msgpuck.h"
 #include "msgpack.h"
 
+#define EXT_TYPE_OBJ 5
 
 #define UTF8_ACCEPT 0
 #define UTF8_REJECT 1
@@ -196,9 +202,17 @@ static void packVariantLen(const Variant& el, int * len ) {
 			*len = mp_sizeof_double( el.toDouble());
 			break;
 		}
-		
 
-		default : raise_warning("error type of data element");
+		case KindOfObject: {
+			VariableSerializer vs(VariableSerializer::Type::Serialize);
+			String str_json (vs.serialize(el, true));
+			*len = mp_sizeof_str( str_json.length() );
+			break;
+		}		
+
+		default : {
+			raise_warning("error type of data element");	
+		}
 	}
 }
 
@@ -303,7 +317,19 @@ static void packVariant(const Variant& el) {
 			break;
 		}
 		
-		default : raise_warning("error type of data element");
+		case KindOfObject: {
+			VariableSerializer vs(VariableSerializer::Type::Serialize);
+			String str_json (vs.serialize(el, true));
+			MsgpackExtension::BufferPtr = mp_encode_ext(MsgpackExtension::BufferPtr, str_json.c_str(), EXT_TYPE_OBJ, str_json.length());
+			break;
+		}		
+
+
+		default : {
+			raise_warning("error type of data element");
+
+
+		}
 	}
 }
 
@@ -400,6 +426,22 @@ void unpackElement( char **p, Variant* pout) {
 			break; 
 		}
 
+		case MP_EXT : {
+			uint32_t len = 0;
+			uint32_t  type = 0;
+			const char * res =  mp_decode_ext(const_cast<const char**>(&pos), &len, &type );			
+			
+			if (type == EXT_TYPE_OBJ) {
+				VariableUnserializer vu(res, len, VariableUnserializer::Type::Serialize);
+				*pout = vu.unserialize();
+			} else {
+				raise_warning("unpack unsupport ext type");	
+			}
+
+			*p = pos;
+			break;
+		}
+
 		default :  
 			raise_warning("unpack error data element");
 			pout->setNull();	
@@ -455,7 +497,7 @@ static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 		MsgpackExtension::Buffer = malloc(new_len);
 
 		if (MsgpackExtension::Buffer == NULL) {
-			raise_error("not engort memory");
+			raise_error("not enough memory");
 		}
 
 	}
