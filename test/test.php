@@ -115,7 +115,7 @@ foreach ($tests as $item) {
       else
             echo 'No',PHP_EOL;
 
-      echo "------------------\n";
+      // echo "------------------\n";
       // if ($item[0] == 'complex map') { 
       //       print_r($item[1]);
       // }
