@@ -1,16 +1,36 @@
 <?php
 function test($type, $variable, $object, $result = null)
 {
-    $serialized = msgpack_pack($variable);
-    $unserialized = msgpack_unpack($serialized, $object);
-    var_dump($unserialized);
+    
+    if (is_array($variable)) {
+        if (count($variable)==3) {
+            $ob = new Obj( isset($variable[0]) ? $variable[0] : null, isset($variable[1]) ? $variable[1] : null, isset($variable[2]) ? $variable[2] : null );
+        } else if (count($variable)==4) {
+            $ob = new Obj( isset($variable[0]) ? $variable[0] : null, isset($variable[1]) ? $variable[1] : null, isset($variable[2]) ? $variable[2] : null , isset($variable[3]) ? $variable[3] : null );
+        } else if (count($variable)==2) {
+            $ob = new Obj( isset($variable[0]) ? $variable[0] : null, isset($variable[1]) ? $variable[1] : null );
+        } else {
+            echo "SKIP ", $type, " count error [", count($variable), "]\n";
+            return;
+        }
+    } else {
+        $ob = new Obj( $variable ); 
+    }
+
+
+
+    $serialized = msgpack_pack([$ob]);
+    $unserialized = msgpack_unpack($serialized);
+    $unserialized = $unserialized[0];
+
+    // var_dump($unserialized);
     if ($result)
     {
-        echo $unserialized == $result ? 'OK' : 'ERROR', PHP_EOL;
+        echo $type , "\t\t\t", $unserialized == $result ? 'OK' : 'ERROR', PHP_EOL;
     }
     else
     {
-        echo 'SKIP', PHP_EOL;
+        echo $type , "\t\t\t",'SKIP', PHP_EOL;
     }
 }
 class Obj
@@ -45,14 +65,11 @@ test('large: -100000', -100000, 'Obj', new Obj(-100000, null, null));
 test('double: 123.456', 123.456, 'Obj', new Obj(123.456, null, null));
 test('empty: ""', "", 'Obj', new Obj("", null, null));
 test('string: "foobar"', "foobar", 'Obj', new Obj("foobar", null, null));
+
 test('array: empty', array(), 'Obj', new Obj(null, null, null));
 test('array(1, 2, 3)', array(1, 2, 3), 'Obj', new Obj(1, 2, 3));
 test('array(array(1, 2, 3), arr...', array(array(1, 2, 3), array(4, 5, 6), array(7, 8, 9)), 'Obj', new Obj(array(1, 2, 3), array(4, 5, 6), array(7, 8, 9)));
-test('array(1, 2, 3, 4)', array(1, 2, 3, 4), 'Obj');
+test('array(1, 2, 3, 4)', array(1, 2, 3, 4), 'Obj', new Obj(1,2,3,4));
+test('array(1, 2, 3, [1,2,3,4])', array(1, 2, 3, [1,2,3,4]) , 'Obj', new Obj(1,2,3,[1,2,3,4]));
 test('array("foo", "foobar", "foohoge")', array("foo", "foobar", "hoge"), 'Obj', new Obj("foo", "foobar", "hoge"));
-test('array("a" => 1, "b" => 2))', array("a" => 1, "b" => 2), 'Obj', new Obj(1, 2, null));
-test('array("one" => 1, "two" => 2))', array("one" => 1, "two" => 2), 'Obj', new Obj(null, null, null, array("one" => 1, "two" => 2)));
-test('array("a" => 1, "b" => 2, 3))', array("a" => 1, "b" => 2, 3), 'Obj', new Obj(1, 2, 3));
-test('array(3, "a" => 1, "b" => 2))', array(3, "a" => 1, "b" => 2), 'Obj', new Obj(1, 2, 3));
-test('array("a" => 1, 3, "b" => 2))', array("a" => 1, 3, "b" => 2), 'Obj', new Obj(1, 2, 3));
 
