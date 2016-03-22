@@ -1,5 +1,5 @@
-
-n test($type, $variable, $object, $result = null)
+<?php
+function test($type, $variable, $object, $result = null)
 {
     $serialized = msgpack_pack($variable);
     $unserialized = msgpack_unpack($serialized, $object);
