@@ -1525,7 +1525,7 @@ mp_encode_extl(char *data, uint8_t type, uint32_t len)
 		data = mp_store_u16(data, len);
 		return mp_store_u8(data, type);
 	} else {
-		data = mp_store_u8(data, 0xdb);
+		data = mp_store_u8(data, 0xc9);
 		data = mp_store_u32(data, len);
 		return mp_store_u8(data, type);
 	}

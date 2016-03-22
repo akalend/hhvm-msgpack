@@ -26,7 +26,12 @@ function test($type, $variable, $object, $result = null)
     // var_dump($unserialized);
     if ($result)
     {
-        echo $type , "\t\t\t", $unserialized == $result ? 'OK' : 'ERROR', PHP_EOL;
+        if ($unserialized == $result) {
+            echo $type , "\t\t\tOK\n";
+        } else{
+            echo $type , "\t\t\t", $unserialized == $result ? 'OK' : 'ERROR', PHP_EOL;
+            // var_dump($unserialized);
+        }
     }
     else
     {
