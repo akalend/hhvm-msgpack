@@ -81,25 +81,17 @@ test('array("foo", "foobar", "foohoge")', array("foo", "foobar", "hoge"), 'Obj',
 $a = array_fill(0, 10, 1);
 test('array(1, 2, 3, [1,1,... (10) ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
 
-$a = array_fill(0, 512, 1);
-test('array(1, 2, 3, [1,1,... (512) ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
-
-$a = array_fill(0, 4096, 1);
-test('array(1, 2, 3, [1,1,... (4096) ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
-
-$dim = 4438;
+$dim = 65535;
 $a = array_fill(0, $dim, 1);
 test('array(1, 2, 3, [1,1,... ('.$dim.') ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
 
-$dim = 4439;
+$dim = 65535 * 4;
 $a = array_fill(0, $dim, 1);
 test('array(1, 2, 3, [1,1,... ('.$dim.') ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
 
-$a = array_fill(0, 8096, 1);
-test('array(1, 2, 3, [1,1,... (8096) ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
 
-
-$a = array_fill(0, 16385, 1);
-test('array(1, 2, 3, [1,1,... (16385) ])', array(1, 2, 3, $a) , 'Obj', new Obj(1,2,3,$a));
-
+$dim = 65535 * 4;
+$a = array_fill(0, $dim, 1);
+$b = array_fill(0, $dim, 1);
+test('array(1, 2, [1,1, ...], [1,1,... ('.$dim.') ])', array(1, 2, $b, $a) , 'Obj', new Obj(1,2,$b,$a));
 
