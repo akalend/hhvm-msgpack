@@ -57,7 +57,7 @@ function msgpack_set_options(int $options): void;
 *  
 */
 <<__Native>>
-function msgpack_set_options(): void;
+function msgpack_reset_options(): void;
 
 /**
 *  @exception extend standart Exception class
