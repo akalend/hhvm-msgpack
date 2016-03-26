@@ -318,6 +318,11 @@ static void packVariant(const Variant& el) {
 		}
 		
 		case KindOfObject: {
+
+
+
+			// printf("is %d\n",  el.  instance_of("\\HH\\Map") );
+
 			VariableSerializer vs(VariableSerializer::Type::Serialize);
 			String str_json (vs.serialize(el, true));
 			MsgpackExtension::BufferPtr = mp_encode_ext(MsgpackExtension::BufferPtr, str_json.c_str(), EXT_TYPE_OBJ, str_json.length());

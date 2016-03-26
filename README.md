@@ -41,12 +41,19 @@ Support Ext (msqpack specification ext type) only for user type = 5 as standart 
 		}
 
 
-Don't work with built-in Hack collections (in TODO list). You must make typization to array:
+The Hack collections packed by ext serialization.
 
 		$v = Vector{42,777};
 		$m = Map{'hello' => 'work'};
-		$data = [1, (array)$v, (array)$m ]; // typization to array
+		$data = [$v, $m ]; 			 // $v & $m serialization as string and packed as ext
+		$packed = msgpack_pack( $data );
+		msgpack_unpack( $packed );   // the $m & $v will be unserialization as HH\Map & HH\Vector
 
+ So You can typization to array:
+
+		$data = [(array)$v, (array)$m ]; // $v & $m packed as array
+		$packed = msgpack_pack( $data );
+		msgpack_unpack( $packed );  the $m & $v will be unserialization as array
 
 ### Example
 
