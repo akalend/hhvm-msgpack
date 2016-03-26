@@ -11,6 +11,8 @@ namespace HPHP {
 
 static Array HHVM_FUNCTION(msgpack_unpack, const String& data);
 static String HHVM_FUNCTION(msgpack_pack, const Array& data);
+static void HHVM_FUNCTION(msgpack_set_options, const int options);
+
 
 class MsgpackExtension : public Extension {
 	public:

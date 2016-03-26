@@ -504,6 +504,10 @@ static MsgpackExtension s_msgpack_extension;
 //////////////////    HHVM_FUNCTION     //////////////////
 
 
+static void HHVM_FUNCTION(msgpack_unpack, int64_t optons) {
+	printf("set_options %d\n", optons );
+}
+
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 
 	// the find package len and округляем до кратного BUFFSIZE

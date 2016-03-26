@@ -40,6 +40,18 @@ function msgpack_unpack(string $msg): Array;
 
 
 /**
+*  set options for module
+*  
+*  @example  $data = msgpack_set_options(MSGPACK_NOOPT)
+*
+*  @param  int $option     - option
+*  
+*/
+<<__Native>>
+function msgpack_set_options(int $msg): void;
+
+
+/**
 *  @exception extend standart Exception class
 * 
 */
