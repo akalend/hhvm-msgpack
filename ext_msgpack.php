@@ -48,8 +48,16 @@ function msgpack_unpack(string $msg): Array;
 *  
 */
 <<__Native>>
-function msgpack_set_options(int $msg): void;
+function msgpack_set_options(int $options): void;
 
+/**
+*  reset options for module
+*  
+*  @example  $data = msgpack_reset_options()
+*  
+*/
+<<__Native>>
+function msgpack_set_options(): void;
 
 /**
 *  @exception extend standart Exception class

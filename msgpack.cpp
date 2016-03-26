@@ -95,11 +95,25 @@ int checkUTF8(uint8_t* s, size_t* count) {
 
 namespace HPHP {
 
+
+/**
+* static constant definition
+*/
+const StaticString
+	s_msgpack_noparam("MSGPACK_NOPARAM"),
+	s_msgpack_ret_toarray("MSGPACK_RET_TOARRAY"),
+	s_msgpack_ret_tocollection("MSGPACK_TO_COLLECTION")
+;
+
+
+
 static void packVariant(const Variant& el);
 static int sizeof_pack(const Array& data);
 static int sizeof_el(const Variant& el);
 
 static void packVariantLen(const Variant& el, int * len );
+
+
 
 /**
 * return true if PHP Array as map
@@ -476,6 +490,9 @@ void MsgpackExtension::moduleInit() {
 	HHVM_FE(msgpack_pack);
 	HHVM_FE(msgpack_unpack);
 	HHVM_FE(msgpack_set_options);
+	HHVM_FE(msgpack_reset_options);
+
+Native::registerConstant<KindOfInt64>(s_msgpack_ret_toarray.get(), 	MSGPACK_RET_TOARRAY);
 
 
 	loadSystemlib();
@@ -493,22 +510,26 @@ void MsgpackExtension::moduleShutdown() {
 
 
 //////////////////    static    /////////////////////////
-int MsgpackExtension::BufferSize = 0;
-void* MsgpackExtension::Buffer = NULL;
-char* MsgpackExtension::BufferPtr = NULL;
-
+int 	MsgpackExtension::BufferSize = 0;
+void* 	MsgpackExtension::Buffer = NULL;
+char* 	MsgpackExtension::BufferPtr = NULL;
+int64_t MsgpackExtension::Options = 0;
 
 
 static MsgpackExtension s_msgpack_extension;
-
 
 
 //////////////////    HHVM_FUNCTION     //////////////////
 
 
 static void HHVM_FUNCTION(msgpack_set_options, const int64_t optons) {
-	printf("set_options %d\n", optons );
+	MsgpackExtension::Options |= optons;
 }
+
+static void HHVM_FUNCTION(msgpack_reset_options) {
+	MsgpackExtension::Options = 0;
+}
+
 
 static String HHVM_FUNCTION(msgpack_pack, const Array& data) {
 

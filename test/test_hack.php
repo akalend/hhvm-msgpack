@@ -5,7 +5,7 @@
 *
 */
 
-msgpack_set_options(777);
+msgpack_set_options(MSGPACK_RET_TOARRAY);
 
 $v = Vector{'one', 2, true };
 $m = Map{"one" => 1, "two" => 2};
