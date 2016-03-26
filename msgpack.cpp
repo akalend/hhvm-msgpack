@@ -506,7 +506,7 @@ static MsgpackExtension s_msgpack_extension;
 //////////////////    HHVM_FUNCTION     //////////////////
 
 
-static void HHVM_FUNCTION(msgpack_set_options, int64_t optons) {
+static void HHVM_FUNCTION(msgpack_set_options, const int64_t optons) {
 	printf("set_options %d\n", optons );
 }
 
