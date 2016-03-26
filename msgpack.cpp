@@ -319,9 +319,22 @@ static void packVariant(const Variant& el) {
 		
 		case KindOfObject: {
 
+			bool isMap = el.toObject().instanceof("\\HH\\Map");
+			if (isMap) {
+				ArrayData* ad = el.toArray().get();
+				printf("serialize Map\n");
+				MsgpackExtension::BufferPtr = mp_encode_map(MsgpackExtension::BufferPtr, el.toArray().length());	
+				mapIteration(ad, encodeMapElement);
+				break;					
+			}
 
-
-			// printf("is %d\n",  el.  instance_of("\\HH\\Map") );
+			bool isVector = el.toObject().instanceof("\\HH\\Vector");
+			if (isVector) {
+				printf("serialize Vector\n");
+				ArrayData* ad = el.toArray().get();
+				MsgpackExtension::BufferPtr = mp_encode_array(MsgpackExtension::BufferPtr, el.toArray().length());
+				arrayIteration(ad, encodeArrayElement);
+			}
 
 			VariableSerializer vs(VariableSerializer::Type::Serialize);
 			String str_json (vs.serialize(el, true));

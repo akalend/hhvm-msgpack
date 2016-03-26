@@ -45,15 +45,9 @@ The Hack collections packed by ext serialization.
 
 		$v = Vector{42,777};
 		$m = Map{'hello' => 'work'};
-		$data = [$v, $m ]; 			 // $v & $m serialization as string and packed as ext
-		$packed = msgpack_pack( $data );
-		msgpack_unpack( $packed );   // the $m & $v will be unserialization as HH\Map & HH\Vector
-
- So You can typization to array:
-
-		$data = [(array)$v, (array)$m ]; // $v & $m packed as array
-		$packed = msgpack_pack( $data );
-		msgpack_unpack( $packed );  the $m & $v will be unserialization as array
+		$data = [$v, $m ];
+		$packed = msgpack_pack( $data ); // the $m & $v will be packed as array
+		msgpack_unpack( $packed );  	 // the $m & $v will be unpacked as array
 
 ### Example
 
