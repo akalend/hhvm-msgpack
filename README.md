@@ -41,7 +41,7 @@ Support Ext (msqpack specification ext type) only for user type = 5 as standart 
 		}
 
 
-The Hack collections packed by ext serialization.
+The Hack collections packed: 
 
 		$v = Vector{42,777};
 		$m = Map{'hello' => 'work'};
