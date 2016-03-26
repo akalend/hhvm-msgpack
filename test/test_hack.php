@@ -5,6 +5,8 @@
 *
 */
 
+msgpack_set_options(777);
+
 $v = Vector{'one', 2, true };
 $m = Map{"one" => 1, "two" => 2};
 $arr = [ 'Pupkin',  null,  42 ,  [ 'sss' => 12, 0 => '2333'  ], [7,13, 21, 33,'*****'] ];

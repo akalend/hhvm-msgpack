@@ -475,12 +475,14 @@ void MsgpackExtension::moduleInit() {
 	
 	HHVM_FE(msgpack_pack);
 	HHVM_FE(msgpack_unpack);
+	HHVM_FE(msgpack_set_options);
+
 
 	loadSystemlib();
 
 	MsgpackExtension::BufferSize = BUFFSIZE;
 	MsgpackExtension::Buffer = malloc(BUFFSIZE);	
-
+	MsgpackExtension::Options = 0;
 }
 
 void MsgpackExtension::moduleShutdown() {
